@@ -1,0 +1,6 @@
+import lib_aurpy.main as main
+import sys
+
+sys.path.append( "lib_aurpy" )
+
+main.main()
