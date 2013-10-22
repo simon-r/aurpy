@@ -168,7 +168,7 @@ def update_packages( pkgd , update_lst ):
     print()
     
     for pkg_name in update_lst :
-        print( "compiling: %s " % pkg_name )
+        print( "\x1b[1;34m===> \x1b[1;31mCOMPILING: \x1b[1;37m %s \x1b[0m " % pkg_name )
         pkgd[pkg_name].compile()
         
         

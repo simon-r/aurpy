@@ -18,6 +18,7 @@
 import lib_aurpy.glob as glob
 import urllib.request
 import re
+import os
 from subprocess import call
 
 def progress_bar( pc ):
@@ -64,13 +65,15 @@ def download_pkg( origin , pkg_name ):
     
     
 def compile_pkg( pkg_name ):
-    cmd = [ "cd %s/pkg"%(glob.COMPILE_DIR) + " ; " ]
-    #cmd += [ "tar" , "xzf" , pkg_name + ".tar.gz" , " ; "  ]
-    #cmd += [ "cd" , pkg_name , " ; "  ]
-    #cmd += [ "makepkg" , " ; " ]
+
+    os.chdir( "%s/pkg"%(glob.COMPILE_DIR) )
+
+    cmd = [ "tar" , "xvzf" , pkg_name + ".tar.gz"  ]
+    call( cmd )
     
-    print( cmd )
+    os.chdir( pkg_name )
     
+    cmd = [ "makepkg" ]    
     call( cmd )
 
 def parse_pkgbuild( pkgbuild ):
