@@ -44,10 +44,28 @@ class package( object ):
     
     name = property( get_name , set_name , doc="" )
     
-    def compile(self):
+    def edit_pkgbuild(self):
+        tools.edit_file( self.name , "PKGBUILD" )
+    
+    def edit_build_file( self , file_name ):
+        if file_name in self._pkg_data["install"] :
+            tools.edit_file( self.name , file_name )
+            
+    def get_install(self):
+        return self._pkg_data["install"]
+    
+    def download_src(self):
         tools.download_pkg( self.origin , self.name )
+        
+    def unpack_src(self):
+        tools.unpack_src( self.name )
+    
+    def compile(self):
         tools.compile_pkg( self.name )
         
+    def install(self):
+        pkg_file_name = "%s-%s-%s%s" % ( self.name , self.repo_version , self._pkg_data["CARCH"][0] , self._pkg_data["PKGEXT"][0] )
+        tools.install_pkg( self.name , [ pkg_file_name ] )
     
     def read_repo_data(self):
         
@@ -80,7 +98,7 @@ class package( object ):
         self._pkgbuild = tools.get_pkgbuild( self.origin , self.name )
         self._pkg_data = tools.parse_pkgbuild( self._pkgbuild )
     
-    def _build_dependecies( self , dep ):
+    def _list_dependecies( self , dep ):
         query = qe.query()
         
         for d in self._pkg_data[dep] :
@@ -97,8 +115,8 @@ class package( object ):
         
         
     def test_dependecies(self):
-        self._build_dependecies( "depends" )
-        self._build_dependecies( "makedepends" )
+        self._list_dependecies( "depends" )
+        self._list_dependecies( "makedepends" )
         #self._build_dependecies( "optdepends" )
         
     def get_depends_istalled( self , dep="depends" ):
@@ -129,9 +147,6 @@ class package( object ):
     
     def new_in_repo(self):
         return  self._installed_version < self._repo_version 
-    
-    def install(self):
-        pass
 
 
 def foreign():
@@ -189,6 +204,7 @@ def print_deps_list( message , up_lst ):
     
 
 def print_update_list( pkgd , update_lst ):
+    
     for pkg , i in zip( update_lst , range( len( update_lst ) ) ):
         ins = pkgd[pkg].get_depends_istalled()
         rep = pkgd[pkg].get_depends_repo()
@@ -210,7 +226,9 @@ def print_update_list( pkgd , update_lst ):
         
         print()
 
+
 def select_packages( pkgd , update_lst ):
+    
     print("\x1b[1;32m* Select Packages \x1b[0m")
     print_update_list( pkgd , update_lst )
     print()
@@ -240,6 +258,41 @@ def select_packages( pkgd , update_lst ):
     return update_lst
     
 
+def compile_sequance( package ):
+    
+    print( "\x1b[1;34m======================================> \x1b[0m " )
+    print( "\x1b[1;34m===> \x1b[1;31mCOMPILING: \x1b[1;37m %s \x1b[0m " % package.name )
+    print( "\x1b[1;34m======================================> \x1b[0m " )
+    print()
+    
+    package.download_src()
+    package.unpack_src()
+    print()
+    ed = input( "\x1b[1;36mEdir PKGBUILD with $EDITOR [Y/n]\x1b[0m" )
+    if ed not in [ "n" , "N" ] :
+        package.edit_pkgbuild()
+        
+    inl = package.get_install()
+    
+    for i in inl :
+        print()
+        ed = input( "\x1b[1;36mEdir %s with $EDITOR [Y/n]\x1b[0m"%i )
+        if ed not in [ "n" , "N" ] :
+            package.edit_build_file( i )
+    
+    package.compile()
+    
+    
+def install_sequance( package ):
+    
+    while True :
+        print()
+        ist = input( "\x1b[1;36m Do you want to install: %s [Y/n]\x1b[0m" % package.name )
+        if ist in [ "y" , "Y" ] :
+            package.install()
+            break 
+
+
 def update_packages( pkgd , update_lst ):
 
     print()
@@ -249,8 +302,8 @@ def update_packages( pkgd , update_lst ):
     print()
     
     for pkg_name in update_lst :
-        print( "\x1b[1;34m===> \x1b[1;31mCOMPILING: \x1b[1;37m %s \x1b[0m " % pkg_name )
-        pkgd[pkg_name].compile()
+        compile_sequance( pkgd[pkg_name] )
+        install_sequance( pkgd[pkg_name] )
         
         
     

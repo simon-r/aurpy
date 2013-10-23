@@ -54,23 +54,56 @@ def download_pkg( origin , pkg_name ):
     
     cmd = [ "wget" ]
     cmd.append( config.get_aur_dw_pkg_url( pkg_name ) )
-    cmd.append( "--directory-prefix=" + "%s/pkg/"%(glob.COMPILE_DIR) )
+    cmd.append( " -nc --directory-prefix=" + config.get_compile_dir() )
     
     call( cmd )
+    
+    
+def edit_file( pkg_name , file_name ):
+    
+    config = cfg.aurpy_config()
+    
+    print( config.get_pkg_build_dir( pkg_name ) )
+    print( config.get_pkg_build_dir( pkg_name ) )
+    print( config.get_pkg_build_dir( pkg_name ) )
+    
+    os.chdir( config.get_pkg_build_dir( pkg_name ) )
+    
+    cmd= os.environ[ "EDITOR" ] + " " + file_name
+    
+    call( cmd.split() )
+    
+def unpack_src( pkg_name ):
+    
+    config = cfg.aurpy_config()
+    
+    os.chdir( config.get_compile_dir() )
+
+    cmd = [ "tar" , "xvzf" , pkg_name + ".tar.gz"  ]
+    call( cmd )    
     
     
 def compile_pkg( pkg_name ):
 
-    os.chdir( "%s/pkg"%(glob.COMPILE_DIR) )
+    config = cfg.aurpy_config()
 
-    cmd = [ "tar" , "xvzf" , pkg_name + ".tar.gz"  ]
-    call( cmd )
-    
-    os.chdir( pkg_name )
-    
-    cmd = [ "makepkg" ]    
-    call( cmd )
+    os.chdir( config.get_pkg_build_dir( pkg_name ) )
+        
+    cmd = "makepkg -f"    
+    call( cmd.split() )
 
+def install_pkg( pkg_name , pkg_files_names ):
+    
+    config = cfg.aurpy_config()
+    os.chdir( config.get_pkg_build_dir( pkg_name ) )
+    
+    cmd = "sudo pacman -U %s"% ( "".join( " %s "%s for s in pkg_files_names ) )
+    
+    print()
+    print( "Installing packages with the command:"  )
+    print( cmd  )
+    
+    call( cmd.split() )
 
 def _get_pkgbuild_variable( var_name , pb_out ):
     m = re.search( "\s+%s=\|\|\|\|(.*)\|\|\|\|"%var_name , pb_out )
@@ -91,14 +124,18 @@ def parse_pkgbuild( pkgbuild ):
     fp.write( pkgbuild )
     fp.close()
     
-    
     cmd = """
     . PKGBUILD ; 
+    . /etc/makepkg.conf
     printf "makedepends=||||" ; for item in ${makedepends[*]}; do printf "%s|||" $item ; done ; printf "|\n";
     printf "depends=||||" ; for item in ${depends[*]}; do printf "%s|||" $item ; done ; printf "|\n";
     printf "source=||||" ; for item in ${source[*]}; do printf "%s|||" $item ; done ; printf "|\n";
     printf "optdepends=||||" ; for item in ${optdepends[*]}; do printf "%s|||" $item ; done ; printf "|\n";
     printf "pkgname=||||" ; for item in ${pkgname[*]}; do printf "%s|||" $item ; done ; printf "|\n";
+    printf "install=||||" ; for item in ${install[*]}; do printf "%s|||" $item ; done ; printf "|\n";
+    printf "CARCH=||||" ; for item in ${CARCH[*]}; do printf "%s|||" $item ; done ; printf "|\n";
+    printf "arch=||||" ; for item in ${arch[*]}; do printf "%s|||" $item ; done ; printf "|\n";
+    printf "PKGEXT=||||" ; for item in ${PKGEXT[*]}; do printf "%s|||" $item ; done ; printf "|\n";
     """
     
     fp = open( wdir + "/script" , "w" )
@@ -115,9 +152,12 @@ def parse_pkgbuild( pkgbuild ):
     pkg_data["source"]      = _get_pkgbuild_variable( "source" , pb_out )
     pkg_data["optdepends"]  = _get_pkgbuild_variable( "optdepends" , pb_out )
     pkg_data["pkgname"]     = _get_pkgbuild_variable( "pkgname" , pb_out )
+    pkg_data["install"]     = _get_pkgbuild_variable( "install" , pb_out )
+    pkg_data["CARCH"]     = _get_pkgbuild_variable( "CARCH" , pb_out )
+    pkg_data["arch"]     = _get_pkgbuild_variable( "arch" , pb_out )
+    pkg_data["PKGEXT"]     = _get_pkgbuild_variable( "PKGEXT" , pb_out )
     
-        
-    #print( pkg_data )
+    print( pkg_data )
             
     return pkg_data
         

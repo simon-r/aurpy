@@ -26,7 +26,7 @@ class aurpy_config( object ):
         config = cp.ConfigParser()
         
         config.add_section( "global" )
-        config.set('global', 'compile_dir', '/tmp/aurpy' )
+        config.set('global', 'compile_dir', '/tmp/aurpy/pkg' )
         config.set('global', 'tmp_dir', '/tmp/aurpy/tmp' )
         config.set('global', 'download', 'wget' )
         
@@ -51,6 +51,12 @@ class aurpy_config( object ):
     def get_tmp_rnd_dir(self):
         chars=string.ascii_uppercase + string.digits
         return self.get_tmp_dir() + "/" + ''.join(random.choice(chars) for x in range(20))
+    
+    def get_pkg_build_dir( self , pkg_name ):
+        return self._config.get( "global" , "compile_dir" ) + "/" + pkg_name
+    
+    def get_compile_dir( self ):
+        return self._config.get( "global" , "compile_dir" )    
     
     def get_aur_dw_pkg_url( self , pkg_name ):
         return self.get_aur_url() + "/" + pkg_name[:2] + "/" + pkg_name + "/" + pkg_name + ".tar.gz"

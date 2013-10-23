@@ -46,7 +46,7 @@ def main():
     pkgd = pkg.foreign()
     
     print()
-    update = pkg.test_packages( pkgd )
+    update = sorted ( pkg.test_packages( pkgd ) )
     print()
     
     pkg.test_dependencies( pkgd , update )
