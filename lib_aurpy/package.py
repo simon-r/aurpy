@@ -79,19 +79,41 @@ class package( object ):
     def read_pkgbuild_data(self):
         self._pkgbuild = tools.get_pkgbuild( self.origin , self.name )
         self._pkg_data = tools.parse_pkgbuild( self._pkgbuild )
-        
-    def test_dependecies(self):
-        
+    
+    def _build_dependecies( self , dep ):
         query = qe.query()
         
-        for d in self._pkg_data["depends"] :
+        for d in self._pkg_data[dep] :
             if query.test_installed_package( d ) :
-                self._pkg_data["depends_installed"] = d
+                self._pkg_data["%s_installed"%dep].append( d )
             elif query.test_repo_package( d ) :
-                self._pkg_data["depends_repo"] = d
-            elif 
-                
+                self._pkg_data["%s_repo"%dep].append( d )
+            elif query.test_aur_packege( d ) :
+                self._pkg_data["%s_aur"%dep].append( d )
+            elif query.test_group_package( d ) :
+                self._pkg_data["%s_group"%dep].append( d )
+            else :
+                self._pkg_data["%s_nd"%dep].append( d )        
+        
+        
+    def test_dependecies(self):
+        self._build_dependecies( "depends" )
+        self._build_dependecies( "makedepends" )
+        #self._build_dependecies( "optdepends" )
+        
+    def get_depends_istalled( self , dep="depends" ):
+        return self._pkg_data[ "%s_installed"%dep ]
     
+    def get_depends_repo( self , dep="depends" ):
+        return self._pkg_data[ "%s_repo"%dep ]
+    
+    def get_depends_aur( self , dep="depends" ):
+        return self._pkg_data[ "%s_aur"%dep ]
+    
+    def get_depends_nd( self , dep="depends" ):
+        return self._pkg_data[ "%s_nd"%dep ]
+            
+           
     def get_repo_version(self):
         return str( self._repo_version )
     
@@ -111,6 +133,22 @@ class package( object ):
     def install(self):
         pass
 
+
+def foreign():
+    
+    query = qe.query()
+    
+    out = query.foreign()
+    
+    pkgs = dict()
+    
+    for p in out :
+        pl = p.split()
+        pkgs[pl[0]] = package()
+        pkgs[pl[0]].name = pl[0]
+        pkgs[pl[0]].installed_version = pl[1]
+        
+    return pkgs
     
 def test_packages( pkgs ):
     
@@ -139,17 +177,38 @@ def test_packages( pkgs ):
     return update_lst
 
 
-def test_dependecies( pkgs , update_lst ):
+def test_dependencies( pkgs , update_lst ):
     for k in update_lst :
         pkgs[k].read_pkgbuild_data()
         pkgs[k].test_dependecies()
 
 
+def print_deps_list( message , up_lst ):
+    if len(up_lst): 
+        print(  message + "".join( ( s + " ")  for s in up_lst ) )
+    
+
 def print_update_list( pkgd , update_lst ):
     for pkg , i in zip( update_lst , range( len( update_lst ) ) ):
-         print( "%d. \x1b[1;33m%s \x1b[0m"%( i,pkg ) , end=" " )
-         print( "\x1b[33m %s ->\x1b[35m %s \x1b[0m"%( pkgd[pkg].installed_version , pkgd[pkg].repo_version ) , end=" " )
-         print()
+        ins = pkgd[pkg].get_depends_istalled()
+        rep = pkgd[pkg].get_depends_repo()
+        aur = pkgd[pkg].get_depends_aur()
+        
+        mkins = pkgd[pkg].get_depends_istalled( "makedepends" )
+        mkrep = pkgd[pkg].get_depends_repo( "makedepends" )
+        mkaur = pkgd[pkg].get_depends_aur( "makedepends" )
+        
+        print( "%d. \x1b[1;33m%s \x1b[0m"%( i,pkg ) , end=" " )
+        print( "\x1b[33m %s ->\x1b[35m %s \x1b[0m"%( pkgd[pkg].installed_version , pkgd[pkg].repo_version ) , end="\n" )
+
+        print_deps_list( "   Installed  deps:     " , ins )
+        print_deps_list( "   Repository deps:     " , rep )
+        print_deps_list( "   AUR        deps:     " , aur )
+        print_deps_list( "   Installed  makedeps: " , mkins )
+        print_deps_list( "   Repository makedeps: " , mkrep )
+        print_deps_list( "   AUR        makedeps: " , mkaur )
+        
+        print()
 
 def select_packages( pkgd , update_lst ):
     print("\x1b[1;32m* Select Packages \x1b[0m")

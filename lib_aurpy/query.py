@@ -15,7 +15,10 @@
 #along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from subprocess import check_output
-import lib_aurpy.package as pkg
+
+import lib_aurpy.config as cfg
+import lib_aurpy.glob as glob
+import urllib.request
 
 class query( object ):
     def __init__(self):
@@ -26,15 +29,8 @@ class query( object ):
         out = check_output( cmd )
         out = out.decode().splitlines()
         
-        pkgs = dict()
+        return out 
         
-        for p in out :
-            pl = p.split()
-            pkgs[pl[0]] = pkg.package()
-            pkgs[pl[0]].name = pl[0]
-            pkgs[pl[0]].installed_version = pl[1]
-            
-        return pkgs
         
     def test_installed_package(self , pkg_name ):
         cmd = "pacman -Q %s"%pkg_name
@@ -53,5 +49,30 @@ class query( object ):
             return None
         
         out = [ out[1].split()[2] , out[0].split()[2] , out[2].split()[2] ]
+        
+        return out
+        
+    def test_group_package( self , pkg_name ):
+        cmd = "pacman -Sg %s"%pkg_name
+        try:
+            out = check_output( cmd.split() ).decode().splitlines()
+        except :
+            return None
+        
+        return out     
+        
+    def test_aur_packege( self , pkg_name ):
+        config = cfg.aurpy_config()
+        
+        opener = urllib.request.FancyURLopener({})
+        f = opener.open( config.get_pkg_url( glob.AUR , pkg_name ) )
+        
+        try :
+            aur_html = f.read()
+        except :
+            return False
+        
+        return True
+        
                 
         

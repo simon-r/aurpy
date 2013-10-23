@@ -22,6 +22,8 @@ import urllib.request
 import re
 import os
 from subprocess import call, check_output
+from collections import defaultdict 
+
 
 def progress_bar( pc ):
     
@@ -106,7 +108,7 @@ def parse_pkgbuild( pkgbuild ):
     os.chdir( wdir )
     pb_out = check_output( [ "bash" , "script"] ).decode()
     
-    pkg_data = dict()
+    pkg_data = defaultdict( list )
         
     pkg_data["depends"]     = _get_pkgbuild_variable( "depends" , pb_out )
     pkg_data["makedepends"] = _get_pkgbuild_variable( "makedepends" , pb_out )
@@ -115,7 +117,7 @@ def parse_pkgbuild( pkgbuild ):
     pkg_data["pkgname"]     = _get_pkgbuild_variable( "pkgname" , pb_out )
     
         
-    print( pkg_data )
+    #print( pkg_data )
             
     return pkg_data
         

@@ -43,11 +43,13 @@ def main():
 #    return 
 
     q = que.query()
-    pkgd = q.foreign()
+    pkgd = pkg.foreign()
     
     print()
     update = pkg.test_packages( pkgd )
     print()
+    
+    pkg.test_dependencies( pkgd , update )
     
     pkg.select_packages( pkgd , update )
     #print( update )
