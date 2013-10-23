@@ -21,6 +21,8 @@ import urllib.request
 import lib_aurpy.version as ver
 import lib_aurpy.tools as tools
 import lib_aurpy.glob as glob
+import lib_aurpy.config as cfg 
+import lib_aurpy.query as qe
 
 class package( object ):
     def __init__( self ):
@@ -48,8 +50,11 @@ class package( object ):
         
     
     def read_repo_data(self):
+        
+        config = cfg.aurpy_config()
+        
         opener = urllib.request.FancyURLopener({})
-        f = opener.open( tools.get_pkg_url( self.origin , self.name ) )
+        f = opener.open( config.get_pkg_url( self.origin , self.name ) )
         
         try :
             aur_html = f.read()
@@ -75,6 +80,17 @@ class package( object ):
         self._pkgbuild = tools.get_pkgbuild( self.origin , self.name )
         self._pkg_data = tools.parse_pkgbuild( self._pkgbuild )
         
+    def test_dependecies(self):
+        
+        query = qe.query()
+        
+        for d in self._pkg_data["depends"] :
+            if query.test_installed_package( d ) :
+                self._pkg_data["depends_installed"] = d
+            elif query.test_repo_package( d ) :
+                self._pkg_data["depends_repo"] = d
+            elif 
+                
     
     def get_repo_version(self):
         return str( self._repo_version )
@@ -123,10 +139,16 @@ def test_packages( pkgs ):
     return update_lst
 
 
+def test_dependecies( pkgs , update_lst ):
+    for k in update_lst :
+        pkgs[k].read_pkgbuild_data()
+        pkgs[k].test_dependecies()
+
+
 def print_update_list( pkgd , update_lst ):
     for pkg , i in zip( update_lst , range( len( update_lst ) ) ):
          print( "%d. \x1b[1;33m%s \x1b[0m"%( i,pkg ) , end=" " )
-         print( "\x1b[33m %s -> %s \x1b[0m"%( pkgd[pkg].installed_version , pkgd[pkg].repo_version ) , end=" " )
+         print( "\x1b[33m %s ->\x1b[35m %s \x1b[0m"%( pkgd[pkg].installed_version , pkgd[pkg].repo_version ) , end=" " )
          print()
 
 def select_packages( pkgd , update_lst ):

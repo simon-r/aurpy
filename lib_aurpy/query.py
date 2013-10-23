@@ -36,3 +36,22 @@ class query( object ):
             
         return pkgs
         
+    def test_installed_package(self , pkg_name ):
+        cmd = "pacman -Q %s"%pkg_name
+        try:
+            out = check_output( cmd.split() ).decode()
+        except :
+            return None
+        return out.split()
+    
+    
+    def test_repo_package( self , pkg_name ):
+        cmd = "pacman -Si %s"%pkg_name
+        try:
+            out = check_output( cmd.split() ).decode().splitlines()
+        except :
+            return None
+        
+        out = [ out[1].split()[2] , out[0].split()[2] , out[2].split()[2] ]
+                
+        

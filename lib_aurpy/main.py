@@ -18,6 +18,7 @@
 import lib_aurpy.package as pkg
 import lib_aurpy.version as ver 
 import lib_aurpy.query as que
+import lib_aurpy.tools as tools 
 
 def main():
 #     pk = pkg.package()
@@ -35,6 +36,12 @@ def main():
 #     
 #     print( v1 < v2 )
 #      
+
+
+
+#    tools.parse_pkgbuild( pkgbuild )
+#    return 
+
     q = que.query()
     pkgd = q.foreign()
     
