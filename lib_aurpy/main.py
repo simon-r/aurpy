@@ -36,23 +36,22 @@ def main():
 #     
 #     print( v1 < v2 )
 #      
-
-
-
 #    tools.parse_pkgbuild( pkgbuild )
 #    return 
+
+    tools.sync_pacman()
 
     q = que.query()
     pkgd = pkg.foreign()
     
     print()
-    update = sorted ( pkg.test_packages( pkgd ) )
+    update_lst = sorted ( pkg.test_packages( pkgd ) )
     print()
     
-    pkg.test_dependencies( pkgd , update )
+    pkg.test_dependencies( pkgd , update_lst )
     
-    pkg.select_packages( pkgd , update )
+    pkg.select_packages( pkgd , update_lst )
     #print( update )
-    pkg.update_packages( pkgd , update )
+    pkg.update_packages( pkgd , update_lst )
     
     

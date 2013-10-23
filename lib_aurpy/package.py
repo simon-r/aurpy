@@ -64,7 +64,13 @@ class package( object ):
         tools.compile_pkg( self.name )
         
     def install(self):
-        pkg_file_name = "%s-%s-%s%s" % ( self.name , self.repo_version , self._pkg_data["CARCH"][0] , self._pkg_data["PKGEXT"][0] )
+        
+        arch = self._pkg_data["CARCH"][0]
+        
+        if "any" in self._pkg_data["arch"] :
+            arch = "any"
+        
+        pkg_file_name = "%s-%s-%s%s" % ( self.name , self.repo_version , arch , self._pkg_data["PKGEXT"][0] )
         tools.install_pkg( self.name , [ pkg_file_name ] )
     
     def read_repo_data(self):

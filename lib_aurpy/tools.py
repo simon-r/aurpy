@@ -54,7 +54,7 @@ def download_pkg( origin , pkg_name ):
     
     cmd = [ "wget" ]
     cmd.append( config.get_aur_dw_pkg_url( pkg_name ) )
-    cmd.append( " -nc --directory-prefix=" + config.get_compile_dir() )
+    cmd.append( "--directory-prefix=" + config.get_compile_dir() )
     
     call( cmd )
     
@@ -100,10 +100,33 @@ def install_pkg( pkg_name , pkg_files_names ):
     cmd = "sudo pacman -U %s"% ( "".join( " %s "%s for s in pkg_files_names ) )
     
     print()
-    print( "Installing packages with the command:"  )
+    print( "\x1b[1;37m Installing packages with the command:\x1b[0m"  )
     print( cmd  )
     
     call( cmd.split() )
+    
+def install_pacman( pkg_name ):
+    
+    cmd = "sudo pacman -S %s" % pkg_name
+    
+    print()
+    print( "\x1b[1;37m Installing packages with the command:\x1b[0m"  )
+    print( "  \x1b[32m%s\x1b[0m"%cmd  )
+    
+    call( cmd.split() )
+    
+def sync_pacman():
+    
+    cmd = "sudo pacman -Sy "
+    
+    print()
+    print( "\x1b[1;37m Sync repos with the command:\x1b[0m" , end=" " )
+    print( "  \x1b[32m%s\x1b[0m"%cmd  )
+    print()
+    
+    call( cmd.split() )
+
+
 
 def _get_pkgbuild_variable( var_name , pb_out ):
     m = re.search( "\s+%s=\|\|\|\|(.*)\|\|\|\|"%var_name , pb_out )
