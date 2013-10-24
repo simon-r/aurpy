@@ -129,7 +129,7 @@ def sync_pacman():
 
 
 def _get_pkgbuild_variable( var_name , pb_out ):
-    m = re.search( "\s+%s=\|\|\|\|(.*)\|\|\|\|"%var_name , pb_out )
+    m = re.search( "=%s=\|\|\|\|(.*)\|\|\|\|"%var_name , pb_out )
     
     if m :
         ss = m.group(1).strip()
@@ -147,19 +147,47 @@ def parse_pkgbuild( pkgbuild ):
     fp.write( pkgbuild )
     fp.close()
     
-    cmd = """
-    . PKGBUILD ; 
-    . /etc/makepkg.conf
-    printf "makedepends=||||" ; for item in ${makedepends[*]}; do printf "%s|||" $item ; done ; printf "|\n";
-    printf "depends=||||" ; for item in ${depends[*]}; do printf "%s|||" $item ; done ; printf "|\n";
-    printf "source=||||" ; for item in ${source[*]}; do printf "%s|||" $item ; done ; printf "|\n";
-    printf "optdepends=||||" ; for item in ${optdepends[*]}; do printf "%s|||" $item ; done ; printf "|\n";
-    printf "pkgname=||||" ; for item in ${pkgname[*]}; do printf "%s|||" $item ; done ; printf "|\n";
-    printf "install=||||" ; for item in ${install[*]}; do printf "%s|||" $item ; done ; printf "|\n";
-    printf "CARCH=||||" ; for item in ${CARCH[*]}; do printf "%s|||" $item ; done ; printf "|\n";
-    printf "arch=||||" ; for item in ${arch[*]}; do printf "%s|||" $item ; done ; printf "|\n";
-    printf "PKGEXT=||||" ; for item in ${PKGEXT[*]}; do printf "%s|||" $item ; done ; printf "|\n";
+    list_cmd = """
+    printf "=<VARIABLE>=||||" ; for item in ${<VARIABLE>[@]}; do printf "%s|||" $item ; done ; printf "|\n";
     """
+    
+    variables = """
+     pkgname
+     pkgver
+     pkgrel
+     pkgdir
+     epoch
+     pkgbase
+     pkgdesc
+     arch
+     url
+     license
+     groups
+     depends
+     optdepends
+     makedepends
+     checkdepends
+     provides
+     conflicts
+     replaces
+     backup
+     options
+     install
+    changelog
+     source
+     noextract
+     md5sums sha1sums sha256sums sha384sums sha512sums 
+     CARCH PKGEXT
+    """.split()
+        
+    cmd = """
+        . PKGBUILD ; 
+        . /etc/makepkg.conf ; 
+    """
+    
+    for v in variables :
+        cmd = cmd + re.sub( "<VARIABLE>" , v , list_cmd ) + "\n"
+    
     
     fp = open( wdir + "/script" , "w" )
     fp.write( cmd )
@@ -169,17 +197,10 @@ def parse_pkgbuild( pkgbuild ):
     pb_out = check_output( [ "bash" , "script"] ).decode()
     
     pkg_data = defaultdict( list )
-        
-    pkg_data["depends"]     = _get_pkgbuild_variable( "depends" , pb_out )
-    pkg_data["makedepends"] = _get_pkgbuild_variable( "makedepends" , pb_out )
-    pkg_data["source"]      = _get_pkgbuild_variable( "source" , pb_out )
-    pkg_data["optdepends"]  = _get_pkgbuild_variable( "optdepends" , pb_out )
-    pkg_data["pkgname"]     = _get_pkgbuild_variable( "pkgname" , pb_out )
-    pkg_data["install"]     = _get_pkgbuild_variable( "install" , pb_out )
-    pkg_data["CARCH"]     = _get_pkgbuild_variable( "CARCH" , pb_out )
-    pkg_data["arch"]     = _get_pkgbuild_variable( "arch" , pb_out )
-    pkg_data["PKGEXT"]     = _get_pkgbuild_variable( "PKGEXT" , pb_out )
     
+    for v in variables :
+        pkg_data[v]     = _get_pkgbuild_variable( v , pb_out )
+           
     print( pkg_data )
             
     return pkg_data

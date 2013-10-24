@@ -52,7 +52,7 @@ def parse_args():
         dest="version",
         help="Display version and exit.")
     
-    parser.add_argument("", "",
+    parser.add_argument("-h", "..help",
         action="store_true",
-        dest="",
-        help="")
+        dest="help",
+        help="Display syntax for the given operation.")

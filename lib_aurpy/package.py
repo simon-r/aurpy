@@ -63,7 +63,7 @@ class package( object ):
     def compile(self):
         tools.compile_pkg( self.name )
         
-    def install(self):
+    def install( self , asdeps=False ):
         
         arch = self._pkg_data["CARCH"][0]
         
