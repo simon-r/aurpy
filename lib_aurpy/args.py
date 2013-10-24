@@ -27,28 +27,41 @@ def parse_args():
         dest="aur",
         help="Perform operation on AUR: uarpy --aur some_pkg .. install or upgrade the given pkg")
     
+    
     parser.add_argument("-D", "--database",
-        action="store_true",
+        action="count",
+        default=0 ,
+        
         dest="database",
         help="Modify the package database.")
     
     parser.add_argument("-Q", "--query",
-        action="store_true",
+        action="count",
+        default=0 ,
         dest="query",
         help="Query the package database")
     
     parser.add_argument("-S", "--sync",
-        action="store_true",
+        action="count",
+        default=0 ,
         dest="sync",
         help="Synchronize packages")
+    
+    parser.add_argument("-R", "--remove",
+        action="count",
+        default=0 ,
+        dest="remove",
+        help="Remove package(s) from the system.")    
 
     parser.add_argument("-T", "--deptest",
-        action="store_true",
+        action="count",
+        default=0 ,
         dest="deptest",
         help="Check dependencies.")
     
     parser.add_argument("-U", "--upgrade",
-        action="store_true",
+        action="count",
+        default=0 ,
         dest="upgrade",
         help="Upgrade or add package(s) to the system and install the required dependencies from sync repos.")
     

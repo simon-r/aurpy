@@ -21,7 +21,7 @@ def try_pacman ( argv ):
     cmd = [ "pacman" ] + argv
     
     try :
-        call ( [ "pacman" ] + argv ).decode()
+        call ( [ "pacman" ] + argv )
         return 
     except :
         pass
@@ -36,7 +36,19 @@ def try_pacman ( argv ):
         return False
     
 def user_pacman ( argv ):
-    pass
+    cmd = [ "pacman" ] + argv
+    
+    try :
+        call ( [ "pacman" ] + argv )
+        return 
+    except :
+        pass
 
 def root_pacman ( argv ):
-    pass
+    cmd = [ "sudo" , "pacman" ] + argv
+    
+    try :
+        call ( cmd )
+        return 
+    except :
+        pass

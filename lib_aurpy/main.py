@@ -50,28 +50,8 @@ def isntall_aur_pkgs( pkgs_list ):
 
 
 def main():
-#     pk = pkg.package()
-#     
-#     pk.origin = "https://aur.archlinux.org/packages"
-#     pk.name = "kdeplasma-applets-pytextmonitor"
-#     
-#     pk.read_repo_data()
-#     
-#     print( pk.name )
-#     print( pk.repo_version )
-#     
-#     v1 = ver.version( "2013.11.1.0.080-1" )
-#     v2 = ver.version( "11.1.0-2" )
-#     
-#     print( v1 < v2 )
-#      
-#    tools.parse_pkgbuild( pkgbuild )
-#    return 
-
+ 
     options = args.parse_args()
-    #print( options.packages )
-
-    #print ( :rtype: )
 
     q = que.query()
 
@@ -79,23 +59,37 @@ def main():
         print( "                       aurpy v%s" % glob.get_version() )
         print( "------------------------------------")
         print( q.pacman_version() )
-        exit()
+        exit(0)
 
     if len( sys.argv ) <= 1 :
-        return 
+        exit(1)
 
     if options.aur :
         if len( options.packages ) > 0 :
             pkgs_list = sorted( list( OrderedDict.fromkeys( options.packages ).keys() ) )
             isntall_aur_pkgs( pkgs_list )
-            return 
+            exit(0)
     
     if options.aur and options.upgrades :
         full_aur_update()
-        return 
+        exit(1)
     
     argv = list( sys.argv )
     argv.pop(0) 
+
+    ## call pacman ....
+    if sum( [ options.database , options.query , options.remove , options.sync , options.deptest , options.upgrade ] ) > 1 :
+        print( "error: only one operation may be used at a time" )
+        exit(1) 
+
+    if options.query or options.deptest or ( options.sync and options.info ):
+        pacman.user_pacman( argv )
+        return 0
+    
+    
+    if options.database or options.upgrade or options.remove or options.sync :
+        pacman.root_pacman( argv )
+        return 0 
 
     pacman.try_pacman( argv )
     
