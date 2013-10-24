@@ -22,6 +22,8 @@ EXPLICIT="explicit"
 MAKE_DEPENDS="make_depends"
 DEPENDS="depends"
 
+VCS_SUFF= "cvs svn hg darcs bzr git".strip().split()
+
 VERSION=tuple( [ 0 , 1 , 0 ] )
 
 def get_version():

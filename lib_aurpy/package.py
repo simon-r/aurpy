@@ -34,6 +34,7 @@ class package( object ):
         self._name = None
         self._reason = None
         self._depends = None
+        self._vcs_pkgbuild = None 
 
     def set_origin( self , orig ):
         self._origin = orig
@@ -58,6 +59,21 @@ class package( object ):
         self._reason = r 
         
     reason = property( get_reason , set_reason , doc="" )
+    
+    def test_vcs(self):
+        for v in glob.VCS_SUFF :
+            if re.search( "\-%s"%v , self.name ) :
+                self._vcs_pkgbuild = v
+                return v
+        self._vcs_pkgbuild = False
+        return False
+    
+    def get_vcs(self):
+        if self._vcs_pkgbuild == None :
+            self.test_vcs()
+        return self._vcs_pkgbuild
+    
+    vcs = property( get_vcs , doc="" )
     
     def edit_pkgbuild(self):
         tools.edit_file( self.name , "PKGBUILD" )
@@ -85,7 +101,11 @@ class package( object ):
         if "any" in self._pkg_data["arch"] :
             arch = "any"
         
-        pkg_file_name = "%s-%s-%s%s" % ( self.name , self.repo_version , arch , self._pkg_data["PKGEXT"][0] )
+        if self.vcs :
+            pkg_file_name = ""
+        else :
+            pkg_file_name = "%s-%s-%s%s" % ( self.name , self.repo_version , arch , self._pkg_data["PKGEXT"][0] )
+            
         tools.install_pkg( self.name , [ pkg_file_name ] )
     
     def read_repo_data(self):
@@ -112,6 +132,7 @@ class package( object ):
             
         self._name = m.group(1)
         self._repo_version = ver.version( m.group(2) )
+        self.test_vcs()
         
         return True
     
@@ -283,7 +304,13 @@ def print_update_list( pkgd , update_lst ):
         mkaur = pkgd[pkg].get_depends_aur( "makedepends" )
         
         print( "%d. \x1b[1;33m%s \x1b[0m"%( i,pkg ) , end=" " )
-        print( "\x1b[33m %s ->\x1b[35m %s \x1b[0m"%( pkgd[pkg].installed_version , pkgd[pkg].repo_version ) , end="\n" )
+        
+        if pkgd[pkg].vcs :
+            print( "\x1b[33m version control system based pkg:\x1b[35m %s \x1b[0m"%( pkgd[pkg].vcs ), end="\n" )
+        else:
+            print( "\x1b[33m %s ->\x1b[35m %s \x1b[0m"%( pkgd[pkg].installed_version , pkgd[pkg].repo_version ) , end="\n" )
+        
+            
 
         print_deps_list( "   Installed  deps:     " , ins )
         print_deps_list( "   Repository deps:     " , rep )
