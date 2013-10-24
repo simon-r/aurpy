@@ -20,13 +20,20 @@ import sys
 import urllib.request
 from collections import defaultdict
 
+#from exception import Exception
+
 import lib_aurpy.version as ver
 import lib_aurpy.tools as tools
 import lib_aurpy.glob as glob
 import lib_aurpy.config as cfg 
 import lib_aurpy.query as qe
 
- 
+
+class package_not_found(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
 class package( object ):
     def __init__( self ):
@@ -35,6 +42,8 @@ class package( object ):
         self._reason = None
         self._depends = None
         self._vcs_pkgbuild = None 
+        self._repo_version = None
+        self._installed_version = None
 
     def set_origin( self , orig ):
         self._origin = orig
@@ -59,6 +68,24 @@ class package( object ):
         self._reason = r 
         
     reason = property( get_reason , set_reason , doc="" )
+    
+    def get_repo_version(self):
+        if self._repo_version == None :
+            return None 
+        return str( self._repo_version )
+    
+    repo_version = property( get_repo_version , doc="" )
+    
+    def get_installed_version(self):
+        if self._installed_version == None :
+            return None 
+        return str( self._installed_version )
+    
+    def set_installed_version(self,v):
+        self._installed_version = ver.version( v )
+        
+    installed_version = property( get_installed_version , set_installed_version , doc="" )    
+    
     
     def test_vcs(self):
         for v in glob.VCS_SUFF :
@@ -95,46 +122,64 @@ class package( object ):
         tools.compile_pkg( self.name )
         
     def install( self , asdeps=False ):
-        
         arch = self._pkg_data["CARCH"][0]
         
         if "any" in self._pkg_data["arch"] :
             arch = "any"
         
         if self.vcs :
-            pkg_file_name = ""
+            pkg_file_name = tools.get_vcs_pkg_file_name( self.name , self.vcs )
         else :
             pkg_file_name = "%s-%s-%s%s" % ( self.name , self.repo_version , arch , self._pkg_data["PKGEXT"][0] )
             
         tools.install_pkg( self.name , [ pkg_file_name ] )
     
+    
     def read_repo_data(self):
         
         config = cfg.aurpy_config()
+        query = qe.query()
         
-        opener = urllib.request.FancyURLopener({})
-        f = opener.open( config.get_pkg_url( self.origin , self.name ) )
+        if self.origin == glob.AUR :
         
-        try :
-            aur_html = f.read()
-            self._aur_html = aur_html.decode()
-        except :
-            return False
-        
-        #print( self._aur_html )
-        
-        r = '<h2>Package\s+Details\:\s+([\w\-]+)\s+([\w+\-\.\:]+)\s*<\/h2>'
-        m = re.search( r , self._aur_html )
-        
-        if m == None :
-            raise NameError("Invalid AUR HTML format")
-             
+            opener = urllib.request.FancyURLopener({})
+            f = opener.open( config.get_pkg_url( self.origin , self.name ) )
             
-        self._name = m.group(1)
-        self._repo_version = ver.version( m.group(2) )
-        self.test_vcs()
+            try :
+                aur_html = f.read()
+                self._aur_html = aur_html.decode()
+            except :
+                return False
+            
+            #print( self._aur_html )
+            
+            r = '<h2>Package\s+Details\:\s+([\w\-]+)\s+([\w+\-\.\:]+)\s*<\/h2>'
+            m = re.search( r , self._aur_html )
+            
+            if m == None :
+                raise NameError("Invalid AUR HTML format")
+                 
+                
+            self.name = m.group(1)
+            self._repo_version = ver.version( m.group(2) )
+            self.test_vcs()
+            
+            return True
         
-        return True
+        else :
+            
+            inf = query.test_repo_package( self.name )
+            inst = test_installed_package( self.name )
+            
+            if inf == None and inst == None :
+                return False
+            
+            self._repo_version = inf[2]
+            if inst :
+                self._installed_version = inst[2]
+                
+            return True
+                
     
     def read_pkgbuild_data(self):
         self._pkgbuild = tools.get_pkgbuild( self.origin , self.name )
@@ -186,16 +231,29 @@ class package( object ):
         aur_l   = self.get_depends_aur() 
         aur_mkl = self.get_depends_aur( "makedepends" )
         
+        repo_l   = self.get_depends_repo()
+        repo_mkl = self.get_depends_repo("makedepends")
+        
         if len(aur_l) + len(aur_mkl) == 0 :
             return False
         
         self._depends = defaultdict()
         
-        for d in ( aur_l + aur_mkl ) :
+        for d in ( aur_l + aur_mkl + repo_l + repo_mkl ) :
             pkg = package()
             pkg.name = d 
-            pkg.origin = glob.AUR
-            pkg.read_repo_data()
+            
+            if d in ( aur_l + aur_mkl ) :
+                pkg.origin = glob.AUR
+            else :
+                pkg.origin = glob.PACKAGES
+                
+            f = pkg.read_repo_data()
+            
+            if not f :
+                raise package_not_found( " The package named: %s do not exists ! "%d )
+                 
+            
             pkg.test_dependecies()
             
             if d in aur_mkl :
@@ -219,23 +277,12 @@ class package( object ):
             if not query.test_installed_package( pkg ) :
                 compile_sequance( self._depends[pkg] )
                 install_sequance( self._depends[pkg] , confirm=False )
-                
-           
-    def get_repo_version(self):
-        return str( self._repo_version )
-    
-    repo_version = property( get_repo_version , doc="" )
-    
-    def get_installed_version(self):
-        return str( self._installed_version )
-    
-    def set_installed_version(self,v):
-        self._installed_version = ver.version( v )
-        
-    installed_version = property( get_installed_version , set_installed_version , doc="" )
-    
+                    
     def new_in_repo(self):
-        return  self._installed_version < self._repo_version 
+        if self.installed_version == None :
+            return True 
+        
+        return self.installed_version < self.repo_version 
 
 
 def foreign():
@@ -254,6 +301,24 @@ def foreign():
         
     return pkgs
     
+    
+def build_pkgs_dict( pkg_list , version=True ):
+    
+    query = qe.query()
+    
+    pkgs = dict()
+    
+    for p in pkg_list :
+        pl = p.split()
+        
+        pkgs[pl[0]] = package()
+        pkgs[pl[0]].name = pl[0]
+        if version : 
+            pkgs[pl[0]].installed_version = pl[1]
+            
+        
+    return pkgs
+
 def test_packages( pkgs ):
     
     default_origin = glob.AUR
@@ -272,6 +337,7 @@ def test_packages( pkgs ):
         i+=1
         
         sys.stdout.flush()
+                
         if f and pkgs[k].new_in_repo() :
             #print( "%s\n %s -> %s\n"%( pkgs[k].name , pkgs[k].installed_version , pkgs[k].repo_version ) )
             update_lst.append(k)
@@ -310,8 +376,6 @@ def print_update_list( pkgd , update_lst ):
         else:
             print( "\x1b[33m %s ->\x1b[35m %s \x1b[0m"%( pkgd[pkg].installed_version , pkgd[pkg].repo_version ) , end="\n" )
         
-            
-
         print_deps_list( "   Installed  deps:     " , ins )
         print_deps_list( "   Repository deps:     " , rep )
         print_deps_list( "   AUR        deps:     " , aur )
@@ -353,7 +417,7 @@ def select_packages( pkgd , update_lst ):
     return update_lst
     
 
-def compile_sequance( package ):
+def compile_sequence( package ):
     
     print( "\x1b[1;34m======================================> \x1b[0m " )
     print( "\x1b[1;34m===> \x1b[1;31mCOMPILING: \x1b[1;37m %s \x1b[0m " % package.name )
@@ -375,16 +439,25 @@ def compile_sequance( package ):
         if ed not in [ "n" , "N" ] :
             package.edit_build_file( i )
     
-    deps_f = package.build_depends_rec()
+    try :
+        deps_f = package.build_depends_rec()
+        
+        if deps_f :
+            print( "\x1b This package require the compilation of the following dependencies: \x1b[0m" )
+        
+        package.compile_install_depends_rec()
+        package.compile()
+        
+        return True 
+    except package_not_found as pnf_err :
+        print ( " \x1b[1;31mIt is impossible to build %s \x1b[0m" % packege.name )
+        print ( " \x1b[1;31mThe required depend %s do not exists  \x1b[0m" % str( pnf_err  ) )
+        return False 
+        
+        
     
-    if deps_f :
-        print( "\x1b This package require the compilation of the following dependencies: \x1b[0m" )
     
-    package.compile_install_depends_rec()
-    package.compile()
-    
-    
-def install_sequance( package , confirm=True ):
+def install_sequence( package , confirm=True ):
     
     while True :
         print()
@@ -407,8 +480,9 @@ def update_packages( pkgd , update_lst ):
     print()
     
     for pkg_name in update_lst :
-        compile_sequance( pkgd[pkg_name] )
-        install_sequance( pkgd[pkg_name] )
+        f = compile_sequence( pkgd[pkg_name] )
+        if f :
+            install_sequence( pkgd[pkg_name] )
         
         
     

@@ -22,6 +22,11 @@ def parse_args():
     
     parser = argparse.ArgumentParser( description=desc )
     
+    parser.add_argument( "--aur",
+        action="store_true",
+        dest="aur",
+        help="Perform operation on AUR: uarpy --aur some_pkg .. install or upgrade the given pkg")
+    
     parser.add_argument("-D", "--database",
         action="store_true",
         dest="database",

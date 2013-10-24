@@ -13,3 +13,30 @@
 #
 #You should have received a copy of the GNU General Public License
 #along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+from subprocess import call, check_output
+
+def try_pacman ( argv ):
+    
+    cmd = [ "pacman" ] + argv
+    
+    try :
+        call ( [ "pacman" ] + argv ).decode()
+        return 
+    except :
+        pass
+    
+    
+    cmd = [ "sudo" ] + cmd 
+    
+    try :
+        call ( [ "sudo", "pacman" ] + argv )
+        return 
+    except :
+        return False
+    
+def user_pacman ( argv ):
+    pass
+
+def root_pacman ( argv ):
+    pass

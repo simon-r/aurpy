@@ -57,7 +57,25 @@ def download_pkg( origin , pkg_name ):
     cmd.append( "--directory-prefix=" + config.get_compile_dir() )
     
     call( cmd )
+ 
+def get_vcs_pkg_file_name( pkg_name , vcs ):
+       
+    config = cfg.aurpy_config()
     
+    pkdir = config.get_pkg_build_dir( pkg_name )
+    
+    lsdir = os.listdir( pkdir )
+    
+    max = 0.0
+    res = None
+    
+    for f in lsdir :
+        m = re.search( "^%s.+pkg.+"%pkg_name , f )
+        if m :
+            if os.path.getmtime( pkdir + "/" + f ) > max :
+                res = f
+    return res
+            
     
 def edit_file( pkg_name , file_name ):
     

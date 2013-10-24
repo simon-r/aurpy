@@ -21,6 +21,33 @@ import lib_aurpy.query as que
 import lib_aurpy.tools as tools 
 import lib_aurpy.args as args
 import lib_aurpy.glob as glob
+import lib_aurpy.pacman as pacman 
+
+from collections import OrderedDict
+import sys
+
+def full_aur_update():
+    pkgd = pkg.foreign()
+    
+    print()
+    update_lst = sorted ( pkg.test_packages( pkgd ) )
+    print()
+    
+    pkg.test_dependencies( pkgd , update_lst )
+    pkg.select_packages( pkgd , update_lst )
+    pkg.update_packages( pkgd , update_lst )
+    
+    
+def isntall_aur_pkgs( pkgs_list ):
+    pkgd = pkg.build_pkgs_dict( pkgs_list , version=False )
+    print( pkgd )
+    update_lst = sorted ( pkg.test_packages( pkgd ) )
+    print( update_lst )
+    pkg.test_dependencies( pkgd , update_lst )
+    pkg.select_packages( pkgd , update_lst )
+    pkg.update_packages( pkgd , update_lst )
+    
+
 
 def main():
 #     pk = pkg.package()
@@ -44,6 +71,8 @@ def main():
     options = args.parse_args()
     #print( options.packages )
 
+    #print ( :rtype: )
+
     q = que.query()
 
     if options.version :
@@ -52,18 +81,26 @@ def main():
         print( q.pacman_version() )
         exit()
 
-    tools.sync_pacman()
+    if len( sys.argv ) <= 1 :
+        return 
 
-    pkgd = pkg.foreign()
+    if options.aur :
+        if len( options.packages ) > 0 :
+            pkgs_list = sorted( list( OrderedDict.fromkeys( options.packages ).keys() ) )
+            isntall_aur_pkgs( pkgs_list )
+            return 
     
-    print()
-    update_lst = sorted ( pkg.test_packages( pkgd ) )
-    print()
+    if options.aur and options.upgrades :
+        full_aur_update()
+        return 
     
-    pkg.test_dependencies( pkgd , update_lst )
+    argv = list( sys.argv )
+    argv.pop(0) 
+
+    pacman.try_pacman( argv )
     
-    pkg.select_packages( pkgd , update_lst )
-    #print( update )
-    pkg.update_packages( pkgd , update_lst )
+    #tools.sync_pacman()
+
+
     
     

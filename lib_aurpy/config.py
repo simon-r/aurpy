@@ -73,7 +73,7 @@ class aurpy_config( object ):
     def get_pkg_build_dir( self , pkg_name ):
         return self._config.get( "global" , "compile_dir" ) + "/" + pkg_name
     
-    def get_compile_dir( self ):
+    def get_compile_dir( self , pkg_name=None ):
         return self._config.get( "global" , "compile_dir" )    
     
     def get_aur_dw_pkg_url( self , pkg_name ):
