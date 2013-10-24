@@ -51,8 +51,113 @@ def parse_args():
         action="store_true",
         dest="version",
         help="Display version and exit.")
+        
+    parser.add_argument("-b", "--dbpath",
+        action="store",
+        dest="dbpath",
+        help="Specify an alternative database location (a typical default is /var/lib/pacman).")
     
-    parser.add_argument("-h", "..help",
+    parser.add_argument("-r", "--root",
+        action="store",
+        dest="root",
+        help="Specify an alternative installation root (default is /)" )
+    
+    parser.add_argument("-v", "--verbose",
         action="store_true",
-        dest="help",
-        help="Display syntax for the given operation.")
+        dest="verbose",
+        help="Output paths such as as the Root, Conf File, DB Path, Cache Dirs, etc. " )
+    
+    parser.add_argument( "--arch",
+        action="store",
+        dest="arch",
+        help="Specify an alternate architecture. " )
+    
+    parser.add_argument("--cachedir", 
+        action="store",
+        dest="cachedir",
+        help="Specify an alternative package cache location (a typical default is /var/cache/pacman/pkg)." )
+    
+#     parser.add_argument("", "",
+#         action="store",
+#         dest="",
+#         help="" )    
+    
+    parser.add_argument("--config",
+        action="store",
+        dest="config",
+        help="Specify an alternate configuration file. " )   
+    
+    parser.add_argument("--debug", 
+        action="store_true",
+        dest="debug",
+        help="Display debug messages. When reporting bugs, this option is recommended to be used." )   
+    
+    parser.add_argument("--gpgdir", 
+        action="store",
+        dest="gpgdir",
+        help="Specify a directory of files used by GnuPG to verify package signatures (a typical default is /etc/pacman.d/gnupg). " )   
+
+    parser.add_argument("--logfile", 
+        action="store",
+        dest="logfile",
+        help="Specify an alternate log file. This is an absolute path, regardless of the installation root setting." )
+    
+    parser.add_argument("--noconfirm", 
+        action="store_true",
+        dest="noconfirm",
+        help="Bypass any and all “Are you sure?” messages. It’s not a good idea to do this unless you want to run pacman from a script. " )
+    
+#### Transaction Options (apply to -S, -R and -U)
+    
+    parser.add_argument("-d", "--nodeps" ,
+        action="store_true",
+        dest="nodeps",
+        help="Skips dependency version checks. Package names are still checked." )    
+
+    parser.add_argument("--dbonly", 
+        action="store_true",
+        dest="dbonly",
+        help="Adds/Removes the database entry only, leaves all files in place." )  
+
+    parser.add_argument("--noprogressbar", 
+        action="store_true",
+        dest="noprogressbar",
+        help="Do not show a progress bar when downloading files. " )  
+    
+    parser.add_argument("--noscriptlet", 
+        action="store_true",
+        dest="noscriptlet",
+        help="If an install scriptlet exists, do not execute it. Do not use this unless you know what you are doing." )  
+    
+    parser.add_argument("-p","--print" ,
+        action="store_true",
+        dest="print",
+        help="Only print the targets instead of performing the actual operation (sync, remove or upgrade). " )  
+    
+    parser.add_argument("--print-format", 
+        action="store",
+        dest="print-format",
+        help="Specify a printf-like format to control the output of the --print operation." )  
+    
+### Upgrade Options (apply to -S and -U)    
+    
+#     parser.add_argument("", 
+#         action="store",
+#         dest="",
+#         help="" )  
+    
+### Query Options
+
+### Remove Options
+
+### Sync Options
+    
+    
+    parser.add_argument(
+        dest="packages",
+        nargs='*',
+        default=[]
+        )
+
+    return parser.parse_args()
+    

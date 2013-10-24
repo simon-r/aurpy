@@ -17,3 +17,7 @@
 
 AUR = "AUR"
 PACKAGES = "packages"
+
+EXPLICIT="explicit"
+MAKE_DEPENDS="make_depends"
+DEPENDS="depends"

@@ -19,6 +19,7 @@ from subprocess import check_output
 import lib_aurpy.config as cfg
 import lib_aurpy.glob as glob
 import urllib.request
+import os
 
 class query( object ):
     def __init__(self):
@@ -35,7 +36,7 @@ class query( object ):
     def test_installed_package(self , pkg_name ):
         cmd = "pacman -Q %s"%pkg_name
         try:
-            out = check_output( cmd.split() ).decode()
+            out = check_output( cmd.split() , stderr=open( os.devnull ) ).decode()
         except :
             return None
         return out.split()
@@ -44,7 +45,7 @@ class query( object ):
     def test_repo_package( self , pkg_name ):
         cmd = "pacman -Si %s"%pkg_name
         try:
-            out = check_output( cmd.split() ).decode().splitlines()
+            out = check_output( cmd.split() , stderr=open( os.devnull ) ).decode().splitlines()
         except :
             return None
         

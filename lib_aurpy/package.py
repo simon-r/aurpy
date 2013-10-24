@@ -18,15 +18,22 @@
 import re
 import sys
 import urllib.request
+from collections import defaultdict
+
 import lib_aurpy.version as ver
 import lib_aurpy.tools as tools
 import lib_aurpy.glob as glob
 import lib_aurpy.config as cfg 
 import lib_aurpy.query as qe
 
+ 
+
 class package( object ):
     def __init__( self ):
-        pass
+        self._origin = None
+        self._name = None
+        self._reason = None
+        self._depends = None
 
     def set_origin( self , orig ):
         self._origin = orig
@@ -43,6 +50,14 @@ class package( object ):
         return self._name
     
     name = property( get_name , set_name , doc="" )
+    
+    def get_reason(self):
+        return self._reason
+    
+    def set_reason( self , r ):
+        self._reason = r 
+        
+    reason = property( get_reason , set_reason , doc="" )
     
     def edit_pkgbuild(self):
         tools.edit_file( self.name , "PKGBUILD" )
@@ -136,7 +151,54 @@ class package( object ):
     
     def get_depends_nd( self , dep="depends" ):
         return self._pkg_data[ "%s_nd"%dep ]
+       
+    def get_depends_list_rec(self):
+        if self._depends == None :
+            return []
+        else :
+            r = []
+            for d in self._depends.keys() :
+                r += self._depends[d].get_depends_list_rec()
+            return r 
+      
+    def build_depends_rec(self):
+        aur_l   = self.get_depends_aur() 
+        aur_mkl = self.get_depends_aur( "makedepends" )
+        
+        if len(aur_l) + len(aur_mkl) == 0 :
+            return False
+        
+        self._depends = defaultdict()
+        
+        for d in ( aur_l + aur_mkl ) :
+            pkg = package()
+            pkg.name = d 
+            pkg.origin = glob.AUR
+            pkg.read_repo_data()
+            pkg.test_dependecies()
             
+            if d in aur_mkl :
+                pkg.reason = glob.MAKE_DEPENDS
+            else :
+                pkg.reason = glob.DEPENDS
+            
+            pkg.build_depends_rec()
+            self._depends[ pkg.name ] = pkg
+            
+        return True 
+
+         
+    def compile_install_depends_rec(self):
+        
+        if self._depends == None :
+            return 
+        
+        for pkg in self._depends.keys() :
+            self._depends[pkg].compile_depends_rec()
+            if not query.test_installed_package( pkg ) :
+                compile_sequance( self._depends[pkg] )
+                install_sequance( self._depends[pkg] , confirm=False )
+                
            
     def get_repo_version(self):
         return str( self._repo_version )
@@ -286,14 +348,24 @@ def compile_sequance( package ):
         if ed not in [ "n" , "N" ] :
             package.edit_build_file( i )
     
+    deps_f = package.build_depends_rec()
+    
+    if deps_f :
+        print( "\x1b This package require the compilation of the following dependencies: \x1b[0m" )
+    
+    package.compile_install_depends_rec()
     package.compile()
     
     
-def install_sequance( package ):
+def install_sequance( package , confirm=True ):
     
     while True :
         print()
-        ist = input( "\x1b[1;36m Do you want to install: %s [Y/n]\x1b[0m" % package.name )
+        if confirm :
+            ist = input( "\x1b[1;36m Confirm the installation of: %s with all dependencies [Y/n] \x1b[0m" % package.name )
+        else :
+            ist = "y"
+            
         if ist in [ "y" , "Y" ] :
             package.install()
             break 

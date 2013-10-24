@@ -19,6 +19,7 @@ import lib_aurpy.package as pkg
 import lib_aurpy.version as ver 
 import lib_aurpy.query as que
 import lib_aurpy.tools as tools 
+import lib_aurpy.args as args
 
 def main():
 #     pk = pkg.package()
@@ -38,6 +39,9 @@ def main():
 #      
 #    tools.parse_pkgbuild( pkgbuild )
 #    return 
+
+    options = args.parse_args()
+    #print( options.packages )
 
     tools.sync_pacman()
 

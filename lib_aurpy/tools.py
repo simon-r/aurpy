@@ -30,7 +30,7 @@ def progress_bar( pc ):
     len = 100
     pcc = int(pc/100*len)
     
-    print( "[" + "#" * pcc + " " * (len-pcc) + "]" + chr(27) + "[A" )
+    print( "[" + "#" * pcc + "%3d%%"%pcc + " " * (len-pcc) + "]" + chr(27) + "[A" )
 
     
 def get_pkgbuild( origin , pkg_name ):
@@ -201,7 +201,7 @@ def parse_pkgbuild( pkgbuild ):
     for v in variables :
         pkg_data[v]     = _get_pkgbuild_variable( v , pb_out )
            
-    print( pkg_data )
+    #print( pkg_data )
             
     return pkg_data
         
