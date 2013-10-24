@@ -141,18 +141,200 @@ def parse_args():
     
 ### Upgrade Options (apply to -S and -U)    
     
-#     parser.add_argument("", 
-#         action="store",
+#     parser.add_argument("--", 
+#         action="store_true",
 #         dest="",
 #         help="" )  
+
+    parser.add_argument("-f", "--force",
+        action="store_true",
+        dest="force",
+        help=" Bypass file conflict checks and overwrite conflicting files. " )  
+
+    parser.add_argument("--asdeps", 
+        action="store_true",
+        dest="asdeps",
+        help="Install packages non-explicitly; in other words, fake their install reason to be installed as a dependency. " )  
+
+    parser.add_argument("--asexplicit", 
+        action="store_true",
+        dest="asexplicit",
+        help="Install packages explicitly; in other words, fake their install reason to be explicitly installed." )  
+
+    parser.add_argument("--ignore", 
+        action="store",
+        dest="ignore",
+        help="Directs pacman to ignore upgrades of package even if there is one available. " )  
+
+    parser.add_argument("--ignoregroup", 
+        action="store",
+        dest="ignoregroup",
+        help="Directs pacman to ignore upgrades of all packages in group even if there is one available." )  
+
+    parser.add_argument("--needed", 
+        action="store",
+        dest="needed",
+        help="Do not reinstall the targets that are already up to date. " )  
+    
+    parser.add_argument("--recursive", 
+        action="store_true",
+        dest="recursive",
+        help="Recursively reinstall all dependencies of the targets. " ) 
     
 ### Query Options
 
+    parser.add_argument( "-c" , "--changelog", 
+        action="store_true",
+        dest="changelog",
+        help="View the ChangeLog of a package if it exists. " ) 
+
+    parser.add_argument( "--deps", 
+        action="store_true",
+        dest="deps",
+        help="Restrict or filter output to packages installed as dependencies." ) 
+
+    parser.add_argument( "-e" , "--explicit", 
+        action="store_true",
+        dest="explicit",
+        help="Restrict or filter output to explicitly installed packages." ) 
+
+    parser.add_argument( "-g" , "--groups", 
+        action="store_true",
+        dest="groups",
+        help="Display all packages that are members of a named group." ) 
+
+    parser.add_argument( "-i" , "--info", 
+        action="store_true",
+        dest="info",
+        help="Display information on a given package. " ) 
+
+    parser.add_argument( "-k" , "--check", 
+        action="store_true",
+        dest="check",
+        help="Check that all files owned by the given package(s) are present on the system." ) 
+
+    parser.add_argument( "-l" , "--list", 
+        action="store_true",
+        dest="list",
+        help="List all files owned by a given package. Multiple packages can be specified on the command line. " ) 
+
+    parser.add_argument( "-m" , "--foreign", 
+        action="store_true",
+        dest="foreign",
+        help="Restrict or filter output to packages that were not found in the sync database(s)." ) 
+
+    parser.add_argument( "-o" , "--owns", 
+        action="store",
+        dest="owns",
+        help="Search for packages that own the specified file(s). The path can be relative or absolute and one or more files can be specified." ) 
+
+    parser.add_argument( "--file", 
+        action="store_true",
+        dest="file",
+        help="Signifies that the package supplied on the command line is a file and not an entry in the database." ) 
+
+    parser.add_argument( "-q" , "--quiet", 
+        action="store_true",
+        dest="quiet",
+        help="Show less information for certain query operations. " ) 
+
+#     parser.add_argument( "-" , "--", 
+#         action="store_true",
+#         dest="",
+#         help="" ) 
+
+    parser.add_argument( "-s" , "--search", 
+        action="store",
+        dest="search",
+        help="Search each locally-installed package for names or descriptions that match regexp." ) 
+
+    parser.add_argument( "-t" , "--unrequired", 
+        action="store_true",
+        dest="unrequired",
+        help="Restrict or filter output to packages not required by any currently installed package. " ) 
+
+    parser.add_argument( "-u" , "--upgrades", 
+        action="store_true",
+        dest="upgrades",
+        help="Restrict or filter output to packages that are out of date on the local system." ) 
+
 ### Remove Options
 
+    parser.add_argument( "--cascade", 
+        action="store_true",
+        dest="cascade",
+        help="Remove all target packages, as well as all packages that depend on one or more target packages." ) 
+
+    parser.add_argument( "-n" , "--nosave", 
+        action="store_true",
+        dest="nosave",
+        help="Instructs pacman to ignore file backup designations. " ) 
+
+#     parser.add_argument( "--recursive", 
+#         action="store_true",
+#         dest="recursive",
+#         help="Remove each target specified including all of their dependencies, provided that (A) they are not required by other packages." ) 
+
+    parser.add_argument( "--unneeded", 
+        action="store_true",
+        dest="unneeded",
+        help="Removes targets that are not required by any other packages." ) 
+
 ### Sync Options
-    
-    
+
+
+    parser.add_argument( "--clean", 
+        action="store_true",
+        dest="clean",
+        help="Remove packages that are no longer installed from the cache as well as currently unused sync databases to free up disk space. " ) 
+
+#     parser.add_argument( "-g" , "--groups", 
+#         action="store_true",
+#         dest="groups",
+#         help="Display all the members for each package group specified." ) 
+
+#     parser.add_argument( "-i" , "--info", 
+#         action="store_true",
+#         dest="info",
+#         help="Display information on a given sync database package. Passing two --info or -i " ) 
+
+#     parser.add_argument( "-l" , "--list", 
+#         action="store_true",
+#         dest="list",
+#         help="" ) 
+
+#     parser.add_argument( "-" , "--", 
+#         action="store_true",
+#         dest="",
+#         help="" ) 
+
+#     parser.add_argument( "-" , "--", 
+#         action="store_true",
+#         dest="",
+#         help="" ) 
+
+    parser.add_argument(  "--sysupgrade" , 
+        action="store_true",
+        dest="sysupgrade",
+        help="Upgrades all packages that are out of date. Each currently-installed package will be examined and upgraded" ) 
+
+    parser.add_argument( "-w" , "--downloadonly", 
+        action="store_true",
+        dest="downloadonly",
+        help="Retrieve all packages from the server, but do not install/upgrade anything." ) 
+
+    parser.add_argument( "-y" , "--refresh", 
+        action="store_true",
+        dest="refresh",
+        help="Download a fresh copy of the master package list from the server(s) defined in pacman.conf(5). " ) 
+
+#     parser.add_argument( "--needed", 
+#         action="store_true",
+#         dest="needed",
+#         help="Do not reinstall the targets that are already up to date. " ) 
+
+#######
+
     parser.add_argument(
         dest="packages",
         nargs='*',

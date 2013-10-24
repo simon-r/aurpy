@@ -21,3 +21,9 @@ PACKAGES = "packages"
 EXPLICIT="explicit"
 MAKE_DEPENDS="make_depends"
 DEPENDS="depends"
+
+VERSION=tuple( [ 0 , 1 , 0 ] )
+
+def get_version():
+    return "%d.%d.%d"%( VERSION[0] , VERSION[1] ,VERSION[2] )
+

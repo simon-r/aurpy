@@ -20,6 +20,7 @@ import lib_aurpy.version as ver
 import lib_aurpy.query as que
 import lib_aurpy.tools as tools 
 import lib_aurpy.args as args
+import lib_aurpy.glob as glob
 
 def main():
 #     pk = pkg.package()
@@ -43,9 +44,16 @@ def main():
     options = args.parse_args()
     #print( options.packages )
 
+    q = que.query()
+
+    if options.version :
+        print( "                       aurpy v%s" % glob.get_version() )
+        print( "------------------------------------")
+        print( q.pacman_version() )
+        exit()
+
     tools.sync_pacman()
 
-    q = que.query()
     pkgd = pkg.foreign()
     
     print()

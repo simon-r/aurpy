@@ -14,7 +14,7 @@
 #You should have received a copy of the GNU General Public License
 #along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-from subprocess import check_output
+from subprocess import check_output, CalledProcessError
 
 import lib_aurpy.config as cfg
 import lib_aurpy.glob as glob
@@ -40,6 +40,14 @@ class query( object ):
         except :
             return None
         return out.split()
+    
+    def pacman_version(self):
+        cmd = "pacman -V"
+        try:
+            out = check_output( cmd.split() , stderr=open( os.devnull ) ).decode()
+        except CalledProcessError as err :
+            out = err.output.decode()
+        return out    
     
     
     def test_repo_package( self , pkg_name ):
