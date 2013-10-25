@@ -75,6 +75,26 @@ def get_vcs_pkg_file_name( pkg_name , vcs ):
             if os.path.getmtime( pkdir + "/" + f ) > max :
                 res = f
     return res
+
+def get_sub_pkg_file_names( base_pkg_name , sub_pkg_names ):
+    
+    config = cfg.aurpy_config()
+    
+    pkdir = config.get_pkg_build_dir( base_pkg_name )
+    
+    lsdir = os.listdir( pkdir )
+    
+    res = []
+    
+    for f in lsdir :
+        max = 0.0
+        for m in re.finditer( "^%s.+pkg.+"%pkg_name , f ) :
+            if os.path.getmtime( pkdir + "/" + f ) > max :
+                res.append( f )
+                
+    return res 
+            
+    
             
     
 def edit_file( pkg_name , file_name ):

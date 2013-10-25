@@ -34,7 +34,6 @@ class aurpy_config( object ):
                                 name text not null unique ,
                                 id integer primary key autoincrement , 
                                 compile_dir text ,
-                                has_sub_pkg boolean default false ,
                                 base_package integer ,
                                 origin text ,
                                 origin_pkgbuild_url text ,
@@ -111,8 +110,10 @@ class aurpy_config( object ):
         
         c.execute( qe )
         res = None 
+        
         for row in c:
             res = row[0]
+        c.close()
         return res 
     
     def get_compile_dir( self , pkg_name=None ):
@@ -123,6 +124,58 @@ class aurpy_config( object ):
                 return cd
         
         return self._config.get( "global" , "compile_dir" )    
+    
+    def set_subpackages(self , base_pkg_name , sub_pkg_names ):
+        conn = sqlite3.connect( self.sqlite_file() )
+        c = conn.cursor()
+        qe = " select * from package where name == \"%s\" " % base_pkg_name
+        
+        res = None
+        c.execute( qe )
+        for row in c:
+            res = row[0]
+        
+        if res :
+            pass
+        else :
+            qe = "insert into package ( name ) values ( \"%s\" ) "% ( base_pkg_name )
+            c.execute( qe )
+            conn.commit()
+            
+            qe = "select id from package where name == \"%s\" " % base_pkg_name
+            c.execute( qe )
+            id_base = -1
+            for row in c:
+                id_base = row[0]
+            
+            for p in sub_pkg_names :
+                if p == base_pkg_name : 
+                    qe = "update package set base_package = %s  where name == \"%s\" "% ( id_base , base_pkg_name )
+                    continue
+                qe = "insert into package ( name , base_package ) values ( \"%s\" , %s ) "% ( base_pkg_name , id_base )
+                c.execute( qe )
+            conn.commit()
+        
+        c.close()
+    
+        
+    def is_subpackage( self , pkg_names ):
+        conn = sqlite3.connect( self.sqlite_file() )
+        c = conn.cursor()
+        
+        qe = " select name from package where id in ( select base_package from package where name == \"%s\" ) " % pkg_name
+        
+        res = None
+        c.execute( qe )
+        for row in c:
+            res = row[0]        
+        
+        c.close()
+        
+        return res  
+        
+        
+             
     
     def get_aur_dw_pkg_url( self , pkg_name ):
         return self.get_aur_url() + "/" + pkg_name[:2] + "/" + pkg_name + "/" + pkg_name + ".tar.gz"

@@ -92,6 +92,15 @@ class package( object ):
     installed_version = property( get_installed_version , set_installed_version , doc="" )    
     
     
+    def get_has_subpackages(self):
+        if len( self._pkg_data["name"] ) > 1 :
+            return True 
+        else :
+            return False
+        
+    has_subpackages = property( get_has_subpackages , doc="" )
+    
+    
     def test_vcs(self):
         for v in glob.VCS_SUFF :
             if re.search( "\-%s"%v , self.name ) :
@@ -133,11 +142,17 @@ class package( object ):
             arch = "any"
         
         if self.vcs :
-            pkg_file_name = tools.get_vcs_pkg_file_name( self.name , self.vcs )
+            pkg_file_name = [ tools.get_vcs_pkg_file_name( self.name , self.vcs ) ]
+        elif self.has_subpackages :
+            get_sub_pkg_file_names( self.name , self._pkg_data["name"] )
         else :
-            pkg_file_name = "%s-%s-%s%s" % ( self.name , self.repo_version , arch , self._pkg_data["PKGEXT"][0] )
+            pkg_file_name = [ "%s-%s-%s%s" % ( self.name , self.repo_version , arch , self._pkg_data["PKGEXT"][0] ) ]
             
-        tools.install_pkg( self.name , [ pkg_file_name ] )
+        tools.install_pkg( self.name , pkg_file_names )
+        
+        if self.has_subpackages :
+            pass
+            # update db
     
     
     def read_repo_data(self):
