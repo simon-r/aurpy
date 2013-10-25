@@ -22,23 +22,49 @@ import os
 import os.path
 import string
 import random
+import sqlite3
+
 
 class aurpy_config( object ):
     def __init__(self):
         self._cfg_dir = os.path.expanduser("~") + "/.config/aurpy"
         self._cfg_file = "aurpy.cfg"
         
+        self._sqlite_file = "aurpy.sqlite"
+        
         if not os.path.exists( self.cfg_file() ) :
-            self.write_dafault()        
+            self.write_dafault()   
+            
+        if not os.path.exists( self.sqlite_file() ) :
+            self.init_database()      
         
         self._config = cp.ConfigParser()
         fp = open( self.cfg_file() )
         self._config.readfp( fp )
         
+        self._database = """
+        create table package (
+            name text not null ,
+            id int primary key not null AUTOINCREMENT , 
+            compile_dir text ,
+            base_package int
+            )
+        """
+        
     
     def cfg_file(self):
         return self._cfg_dir + "/" + self._cfg_file
     
+    def sqlite_file(self):
+        return self._cfg_dir + "/" + self._sqlite_file
+    
+    
+    def init_database(self):
+        conn = sqlite3.connect( self.sqlite_file() )
+        c = conn.cursor()
+        c.execute( self._database )
+        conn.commit()
+        c.close()
     
     def write_dafault(self):
         config = cp.ConfigParser()

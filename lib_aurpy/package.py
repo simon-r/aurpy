@@ -42,8 +42,8 @@ class package( object ):
         self._reason = None
         self._depends = None
         self._vcs_pkgbuild = None 
-        self._repo_version = None
-        self._installed_version = None
+        self._repo_version = ver.version( "0.0.0-0" )
+        self._installed_version = ver.version( "0.0.0-0" )
 
     def set_origin( self , orig ):
         self._origin = orig
@@ -72,14 +72,19 @@ class package( object ):
     def get_repo_version(self):
         if self._repo_version == None :
             return None 
-        return str( self._repo_version )
+        return self._repo_version 
     
-    repo_version = property( get_repo_version , doc="" )
+    def set_repo_version(self,v):
+        if self._repo_version == None :
+            return None 
+        self._repo_version = ver.version( v ) 
+    
+    repo_version = property( get_repo_version , set_repo_version , doc="" )
     
     def get_installed_version(self):
         if self._installed_version == None :
             return None 
-        return str( self._installed_version )
+        return self._installed_version 
     
     def set_installed_version(self,v):
         self._installed_version = ver.version( v )
@@ -161,22 +166,27 @@ class package( object ):
                  
                 
             self.name = m.group(1)
-            self._repo_version = ver.version( m.group(2) )
+            self.repo_version = m.group(2) 
             self.test_vcs()
+            
+            inst = query.test_installed_package( self.name )
+            if inst :
+                self.installed_version = inst[1]
             
             return True
         
         else :
             
             inf = query.test_repo_package( self.name )
-            inst = test_installed_package( self.name )
+            inst = query.test_installed_package( self.name )
             
             if inf == None and inst == None :
                 return False
             
-            self._repo_version = inf[2]
+            self.repo_version = inf[2]
+            
             if inst :
-                self._installed_version = inst[2]
+                self.installed_version = inst[1]
                 
             return True
                 
@@ -316,7 +326,6 @@ def build_pkgs_dict( pkg_list , version=True ):
         if version : 
             pkgs[pl[0]].installed_version = pl[1]
             
-        
     return pkgs
 
 def test_packages( pkgs ):

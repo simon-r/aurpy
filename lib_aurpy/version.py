@@ -34,7 +34,7 @@ class version( object ):
     def __str__(self):
         return self.ver
         
-    def __lt__(self,other):
+    def __lt__( self , other ):
         
         lon = -1
         
@@ -76,8 +76,15 @@ class version( object ):
         
         return False 
     
-    def __gt__(self,other):
+    def __gt__( self , other ):
+        if other == None :
+            return False
+         
         return ( other < self )
     
-    def __eq__(self,other):
+    def __eq__( self , other ):
+        if other == None :
+            return False
+        
         return not( ( other < self ) or ( self < other ) )
+    
