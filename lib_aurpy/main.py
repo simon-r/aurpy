@@ -22,6 +22,7 @@ import lib_aurpy.tools as tools
 import lib_aurpy.args as args
 import lib_aurpy.glob as glob
 import lib_aurpy.pacman as pacman 
+import lib_aurpy.config as cfg
 
 from collections import OrderedDict
 import sys
@@ -39,7 +40,7 @@ def full_aur_update():
     
     
 def isntall_aur_pkgs( pkgs_list ):
-    pkgd = pkg.build_pkgs_dict( pkgs_list , version=False )
+    pkgd = pkg.build_pkgs_dict( pkgs_list , version=False , explicit=True )
     print( pkgd )
     update_lst = sorted ( pkg.test_packages( pkgd ) )
     print( update_lst )
@@ -49,7 +50,30 @@ def isntall_aur_pkgs( pkgs_list ):
     
 
 
+def test_database():
+    cf = cfg.aurpy_config()
+    
+    cf.set_subpackages( "mainp" , [ "sub1" , "sub2" , "sub3" , "sub4" , "mainp" ] )
+    cf.set_subpackages( "mainp2" , [ "sub12" , "sub22" , "sub32" , "sub42" , "mainp2" ] )
+    
+    print( cf.is_subpackage( "sub12" ) )
+    print( cf.has_subpackages( "mainp2" ) )
+    
+    cf.insert_db_package( "ciao" , "/tmp" , "aur" , "aur_url" , "src_url" )
+    cf.insert_db_package( "ciao2" , "/tmp" , "aur" , "aur_url" , "src_url" )
+    
+#     for i in range(100) :
+#         cf.insert_db_package( "ciao%d"%i , "/tmp" , "aur" , "aur_url" , "src_url" )
+#         
+#     for i in range( 20 , 50 ) :
+#         cf.set_subpackages( "ciao%d"%i , [ "ciao%d"%(i-30) ] ) 
+    
+    exit(0)
+
+
 def main():
+ 
+    #test_database()
  
     options = args.parse_args()
 

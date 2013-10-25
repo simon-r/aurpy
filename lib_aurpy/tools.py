@@ -129,29 +129,6 @@ def compile_pkg( pkg_name ):
         
     cmd = "makepkg -f"    
     call( cmd.split() )
-
-def install_pkg( pkg_name , pkg_files_names ):
-    
-    config = cfg.aurpy_config()
-    os.chdir( config.get_pkg_build_dir( pkg_name ) )
-    
-    cmd = "sudo pacman -U %s"% ( "".join( " %s "%s for s in pkg_files_names ) )
-    
-    print()
-    print( "\x1b[1;37m Installing packages with the command:\x1b[0m"  )
-    print( cmd  )
-    
-    call( cmd.split() )
-    
-def install_pacman( pkg_name ):
-    
-    cmd = "sudo pacman -S %s" % pkg_name
-    
-    print()
-    print( "\x1b[1;37m Installing packages with the command:\x1b[0m"  )
-    print( "  \x1b[32m%s\x1b[0m"%cmd  )
-    
-    call( cmd.split() )
     
 def sync_pacman():
     

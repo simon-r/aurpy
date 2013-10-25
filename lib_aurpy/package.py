@@ -27,6 +27,7 @@ import lib_aurpy.tools as tools
 import lib_aurpy.glob as glob
 import lib_aurpy.config as cfg 
 import lib_aurpy.query as qe
+import lib_aurpy.pacman as pacman
 
 
 class package_not_found(Exception):
@@ -146,9 +147,9 @@ class package( object ):
         elif self.has_subpackages :
             get_sub_pkg_file_names( self.name , self._pkg_data["name"] )
         else :
-            pkg_file_name = [ "%s-%s-%s%s" % ( self.name , self.repo_version , arch , self._pkg_data["PKGEXT"][0] ) ]
+            pkg_file_names = [ "%s-%s-%s%s" % ( self.name , self.repo_version , arch , self._pkg_data["PKGEXT"][0] ) ]
             
-        tools.install_pkg( self.name , pkg_file_names )
+        pacman.install_pkg_list( self.name , pkg_file_names )
         
         if self.has_subpackages :
             config = cfg.aurpy_config()
@@ -327,7 +328,7 @@ def foreign():
     return pkgs
     
     
-def build_pkgs_dict( pkg_list , version=True ):
+def build_pkgs_dict( pkg_list , version=True , explicit=False ):
     
     query = qe.query()
     
@@ -340,6 +341,9 @@ def build_pkgs_dict( pkg_list , version=True ):
         pkgs[pl[0]].name = pl[0]
         if version : 
             pkgs[pl[0]].installed_version = pl[1]
+            
+        if explicit :
+            pkgs[pl[0]].reason = glob.EXPLICIT
             
     return pkgs
 
@@ -364,6 +368,8 @@ def test_packages( pkgs ):
                 
         if f and pkgs[k].new_in_repo() :
             #print( "%s\n %s -> %s\n"%( pkgs[k].name , pkgs[k].installed_version , pkgs[k].repo_version ) )
+            update_lst.append(k)
+        elif pkgs[k].reason == glob.EXPLICIT :
             update_lst.append(k)
     
     print()

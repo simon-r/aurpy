@@ -15,6 +15,14 @@
 #along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 from subprocess import call, check_output
+import lib_aurpy.glob as glob
+import lib_aurpy.config as cfg 
+
+import urllib.request
+import re
+import os
+from subprocess import call, check_output
+from collections import defaultdict 
 
 def try_pacman ( argv ):
     
@@ -34,6 +42,7 @@ def try_pacman ( argv ):
         return 
     except :
         return False
+
     
 def user_pacman ( argv ):
     cmd = [ "pacman" ] + argv
@@ -44,6 +53,7 @@ def user_pacman ( argv ):
     except :
         pass
 
+
 def root_pacman ( argv ):
     cmd = [ "sudo" , "pacman" ] + argv
     
@@ -52,3 +62,24 @@ def root_pacman ( argv ):
         return 
     except :
         pass
+ 
+    
+def install_pkg_list( pkg_name , pkg_files_names , reason=glob.EXPLICIT  ) :
+    
+    config = cfg.aurpy_config()
+    os.chdir( config.get_pkg_build_dir( pkg_name ) )
+    
+    if reason == glob.EXPLICIT :
+        reason = "--asexplicit"
+    else :
+        reason = "--asdeps"
+    
+    cmd = "sudo pacman -U %s %s"% ( reason , "".join( " %s "%s for s in pkg_files_names ) )
+    
+    print()
+    print( "\x1b[1;37m Installing packages with the command:\x1b[0m"  )
+    print( "    \x1b[1;32m %s \x1b[0m"%cmd  )
+    print()
+    
+    call( cmd.split() )
+    

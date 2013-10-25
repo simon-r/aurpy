@@ -52,8 +52,6 @@ class aurpy_config( object ):
         fp = open( self.cfg_file() )
         self._config.readfp( fp )
         
-
-        
     
     def cfg_file(self):
         return self._cfg_dir + "/" + self._cfg_file
@@ -128,12 +126,73 @@ class aurpy_config( object ):
     def _get_sqlite_package_id(self , pkg_name ):
         conn = sqlite3.connect( self.sqlite_file() )
         c = conn.cursor()
-        qe = " select * from package where name == \"%s\" " % base_pkg_name
+        qe = " select id from package where name == \"%s\" " % pkg_name
+        c.execute( qe )
         id_base = None
         for row in c: id_base = row[0]          
         c.close()
         
         return id_base                
+        
+    def insert_db_package( self , pkg_name , 
+                           compile_dir = None ,  
+                           origin = None ,
+                           origin_pkgbuild_url = None , 
+                           origin_src_pkg_url = None ):
+        
+        conn = sqlite3.connect( self.sqlite_file() )
+        
+        id_base = self._get_sqlite_package_id( pkg_name )
+        
+        c = conn.cursor()
+        if id_base != None :
+            qe = " update package set "
+            qee = ""
+        else :
+            qe = " insert into package ( name "
+            qee = " values ( \"%s\" " %  pkg_name
+            
+        if compile_dir :
+            if id_base != None :
+                qe += " compile_dir = \"%s\" " % compile_dir
+            else :
+                qe += " , compile_dir "
+                qee += " , \"%s\"  " % compile_dir
+                
+        if origin :
+            if id_base != None :
+                qe += " , origin = \"%s\" " % origin
+            else :
+                qe += " , origin "
+                qee += " , \"%s\"  " % origin                
+
+        if origin_pkgbuild_url :
+            if id_base != None :
+                qe += " , origin_pkgbuild_url = \"%s\" " % origin_pkgbuild_url
+            else :
+                qe += " , origin_pkgbuild_url "
+                qee += " , \"%s\"  " % origin_pkgbuild_url
+                
+        if origin_src_pkg_url :
+            if id_base != None :
+                qe += " , origin_src_pkg_url = \"%s\" " % origin_src_pkg_url
+            else :
+                qe += " , origin_src_pkg_url "
+                qee += " , \"%s\"  " % origin_src_pkg_url
+
+        
+        if id_base != None :
+            qe += " where name =  \"%s\" " %  pkg_name
+        else : 
+            qe = qe + " ) " + qee + " ) "
+            
+        print( qe )
+        c.execute( qe )
+        id_base = None
+        conn.commit()
+        c.close()
+        
+        return id_base   
         
     
     def set_subpackages(self , base_pkg_name , sub_pkg_names ):
@@ -146,10 +205,12 @@ class aurpy_config( object ):
         c = conn.cursor()
         qe = " select * from package where name == \"%s\" " % base_pkg_name
         
-        id_base = self._get_sqlite_package_id(base_pkg_name)
+        id_base = self._get_sqlite_package_id( base_pkg_name )
+        print( id_base )
         
         if id_base :
-            sbs = self.has_subpackages( base_pkg_name )
+            #sbs = self.has_subpackages( base_pkg_name )
+            pass
                         
         else :
             qe = "insert into package ( name ) values ( \"%s\" ) "% ( base_pkg_name )
@@ -159,18 +220,19 @@ class aurpy_config( object ):
             id_base = self._get_sqlite_package_id( base_pkg_name )
             
         for p in sub_pkg_names :
-            if p == base_pkg_name or not self._get_sqlite_package_id( p ) : 
+            if self._get_sqlite_package_id( p ) != None : 
                 qe = "update package set base_package = %s  where name == \"%s\" "% ( id_base , base_pkg_name )
-                continue
-            qe = "insert into package ( name , base_package ) values ( \"%s\" , %s ) "% ( base_pkg_name , id_base )
+            else :
+                qe = "insert into package ( name , base_package ) values ( \"%s\" , %s ) "% ( p , id_base )
+            print( qe )
             c.execute( qe )
         conn.commit()
         
-        sbs = set( sub_pkg_names ) - set( sbs )
-        
-        for p in sbs :
-            qe = "update package set base_package = NULL  where name == \"%s\" "% ( id_base , base_pkg_name )
-            c.execute( qe )
+#         sbs = set( sub_pkg_names ) - set( sbs )
+#         
+#         for p in sbs :
+#             qe = "update package set base_package = NULL  where name == \"%s\" "% ( id_base , base_pkg_name )
+#             c.execute( qe )
             
         conn.commit()
         c.close()
@@ -206,7 +268,7 @@ class aurpy_config( object ):
         c = conn.cursor()
         
         qe = " select name from package where base_package in ( select id from package where name == \"%s\" ) " % pkg_name
-        
+        c.execute( qe )
         res = []
         c.execute( qe )
         for row in c:
