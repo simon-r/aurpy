@@ -24,6 +24,11 @@ import os
 from subprocess import call, check_output
 from collections import defaultdict 
 
+class compilation_error(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
 def progress_bar( pc ):
     
@@ -117,9 +122,20 @@ def unpack_src( pkg_name ):
     
     os.chdir( config.get_compile_dir() )
 
-    cmd = [ "tar" , "xvzf" , pkg_name + ".tar.gz"  ]
+    cmd = [ "bsdtar" , "xzf" , pkg_name + ".tar.gz"  ]
     call( cmd )    
     
+
+def own_package( pkg_name , pkg_list ):
+    
+    for p in pkg_list :
+        pl = p.split(">=")
+        
+        if pl[0] == pkg_name :
+            return True
+        
+        return False
+     
     
 def compile_pkg( pkg_name ):
 
@@ -128,7 +144,10 @@ def compile_pkg( pkg_name ):
     os.chdir( config.get_pkg_build_dir( pkg_name ) )
         
     cmd = "makepkg -f"    
-    call( cmd.split() )
+    ret = call( cmd.split() )
+    
+    if ret != 0 :
+        raise compilation_error( pkg_name )
     
 def sync_pacman():
     
@@ -216,7 +235,7 @@ def parse_pkgbuild( pkgbuild ):
     for v in variables :
         pkg_data[v]     = _get_pkgbuild_variable( v , pb_out )
            
-    #print( pkg_data )
+    print( pkg_data )
             
     return pkg_data
         

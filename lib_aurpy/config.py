@@ -226,6 +226,7 @@ class aurpy_config( object ):
                 qe = "insert into package ( name , base_package ) values ( \"%s\" , %s ) "% ( p , id_base )
             print( qe )
             c.execute( qe )
+        
         conn.commit()
         
 #         sbs = set( sub_pkg_names ) - set( sbs )
@@ -234,7 +235,7 @@ class aurpy_config( object ):
 #             qe = "update package set base_package = NULL  where name == \"%s\" "% ( id_base , base_pkg_name )
 #             c.execute( qe )
             
-        conn.commit()
+        #conn.commit()
         c.close()
     
         

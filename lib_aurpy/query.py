@@ -18,6 +18,8 @@ from subprocess import check_output, CalledProcessError
 
 import lib_aurpy.config as cfg
 import lib_aurpy.glob as glob
+import lib_aurpy.version as ver
+
 import urllib.request
 import os
 
@@ -43,12 +45,27 @@ class query( object ):
         :param pkg_name: The name of the package
         :rtype: a list containing [ name , version ] 
         """
-        cmd = "pacman -Q %s"%pkg_name
+        
+        pl = pkg_name.split( ">=" )
+        
+        cmd = "pacman -Q %s"%pl[0]
+        
+        #print( cmd )
+        #print( pl )
+        
         try:
-            out = check_output( cmd.split() , stderr=open( os.devnull ) ).decode()
+            out = check_output( cmd.split() , stderr=open( os.devnull ) ).decode().strip().split()
         except :
             return None
-        return out.split()
+        
+        if len( pl ) > 1 :
+            v = ver.version( pl[1] )
+            vi = ver.version( out[1] )
+            
+            if vi < v :
+                return None
+        
+        return out
     
     def pacman_version(self):
         """
@@ -68,11 +85,21 @@ class query( object ):
         :param pkg_name: The name of the package
         :rtype: return a list containing [ name , repository , version ]. If the package do non exists it return None 
         """
-        cmd = "pacman -Si %s"%pkg_name
+        
+        pl = pkg_name.split( ">=" )
+        
+        cmd = "pacman -Si %s"%pl[0]
         try:
-            out = check_output( cmd.split() , stderr=open( os.devnull ) ).decode().splitlines()
+            out = check_output( cmd.split() , stderr=open( os.devnull ) ).decode().strip().splitlines()
         except :
             return None
+        
+        if len( pl ) > 1 :
+            v = ver.version( pl[1] )
+            vi = ver.version( out[2].split()[2] )
+            
+            if vi < v :
+                return None     
         
         out = [ out[1].split()[2] , out[0].split()[2] , out[2].split()[2] ]
         
@@ -98,10 +125,13 @@ class query( object ):
         :param pkg_name: The name of the package
         :rtype: True if it exists of False
         """
+        
+        pl = pkg_name.split( ">=" )
+        
         config = cfg.aurpy_config()
         
         opener = urllib.request.FancyURLopener({})
-        f = opener.open( config.get_pkg_url( glob.AUR , pkg_name ) )
+        f = opener.open( config.get_pkg_url( glob.AUR , pl[0] ) )
         
         try :
             aur_html = f.read()

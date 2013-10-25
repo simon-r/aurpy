@@ -150,7 +150,7 @@ class package( object ):
             pkg_file_names = [ "%s-%s-%s%s" % ( self.name , self.repo_version , arch , self._pkg_data["PKGEXT"][0] ) ]
         
         if asdeps :
-            pacman.install_pkg_list( self.name , pkg_file_names , reason=glog.DEPENDS )
+            pacman.install_pkg_list( self.name , pkg_file_names , reason=glob.DEPENDS )
         else :    
             pacman.install_pkg_list( self.name , pkg_file_names )
         
@@ -256,7 +256,7 @@ class package( object ):
             for d in self._depends.keys() :
                 r += self._depends[d].get_depends_list_rec()
             return r 
-      
+    
     def build_depends_rec(self):
         aur_l   = self.get_depends_aur() 
         aur_mkl = self.get_depends_aur( "makedepends" )
@@ -264,16 +264,19 @@ class package( object ):
         repo_l   = self.get_depends_repo()
         repo_mkl = self.get_depends_repo("makedepends")
         
+        print( aur_l + aur_mkl + repo_l + repo_mkl )
         if len(aur_l) + len(aur_mkl) == 0 :
             return False
         
         self._depends = defaultdict()
         
-        for d in ( aur_l + aur_mkl + repo_l + repo_mkl ) :
+        for dd in ( aur_l + aur_mkl + repo_l + repo_mkl ) :
+            d = dd.split( ">=" )[0]
+            print(d)
             pkg = package()
             pkg.name = d 
             
-            if d in ( aur_l + aur_mkl ) :
+            if tools.own_package( d , aur_l + aur_mkl ) :
                 pkg.origin = glob.AUR
             else :
                 pkg.origin = glob.PACKAGES
@@ -283,30 +286,37 @@ class package( object ):
             if not f :
                 raise package_not_found( " The package named: %s do not exists ! "%d )
                  
+            ######################################
+            ######################################
+            #pkg.test_dependecies()
             
-            pkg.test_dependecies()
-            
-            if d in aur_mkl :
+            if tools.own_package( d , aur_mkl ) :
                 pkg.reason = glob.MAKE_DEPENDS
             else :
                 pkg.reason = glob.DEPENDS
             
+            print( "ssssssssssssssssssssssssssssssssssssss" )
+            pkg.read_pkgbuild_data() 
             pkg.build_depends_rec()
-            self._depends[ pkg.name ] = pkg
             
+            self._depends[ pkg.name ] = pkg
+          
         return True 
 
          
     def compile_install_depends_rec(self):
         
+        query = qe.query()
+        
         if self._depends == None :
             return 
         
         for pkg in self._depends.keys() :
-            self._depends[pkg].compile_depends_rec()
+            self._depends[pkg].compile_install_depends_rec()
             if not query.test_installed_package( pkg ) :
-                compile_sequance( self._depends[pkg] )
-                install_sequance( self._depends[pkg] , confirm=False )
+                f = compile_sequence( self._depends[pkg] )
+                if f :
+                    install_sequence( self._depends[pkg] , confirm=False , asdep=True )
                     
     def new_in_repo(self):
         if self.installed_version == None :
@@ -457,7 +467,7 @@ def compile_sequence( package ):
     print( "\x1b[1;34m===> \x1b[1;31mCOMPILING: \x1b[1;37m %s \x1b[0m " % package.name )
     print( "\x1b[1;34m======================================> \x1b[0m " )
     print()
-    
+        
     package.download_src()
     package.unpack_src()
     print()
@@ -484,9 +494,15 @@ def compile_sequence( package ):
         
         return True 
     except package_not_found as pnf_err :
-        print ( " \x1b[1;31mIt is impossible to build %s \x1b[0m" % packege.name )
-        print ( " \x1b[1;31mThe required depend %s do not exists  \x1b[0m" % str( pnf_err  ) )
-        return False 
+        print ( " \x1b[1;31mIt is impossible to build %s \x1b[0m" % package.name )
+        print ( " \x1b[1;31m%s \x1b[0m" % str( pnf_err  ) )
+        raise pnf_err
+    except tools.compilation_error as cerr :
+        print ( " \x1b[1;31mIt is impossible to build %s \x1b[0m" % package.name )
+        print ( " \x1b[1;31m An error as been occurred during the compilation of %s !  \x1b[0m" % str( cerr )  )
+        raise tools.compilation_error( package.name )
+    except :
+        raise
         
         
     
@@ -505,7 +521,7 @@ def install_sequence( package , confirm=True , asdep=False ):
             break 
 
 
-def update_packages( pkgd , update_lst ):
+def update_packages_base( pkgd , update_lst ):
 
     print()
     print()
@@ -514,9 +530,15 @@ def update_packages( pkgd , update_lst ):
     print()
     
     for pkg_name in update_lst :
-        f = compile_sequence( pkgd[pkg_name] )
-        if f :
+        try :
+            compile_sequence( pkgd[pkg_name] )
             install_sequence( pkgd[pkg_name] )
+        except :
+            print()
+            print ( " \x1b[1;31m The compilation of %s has been interrupted due to an error "
+                    "during the building procedure !!! \x1b[0m" % pkg_name )
+            
+            
         
         
     

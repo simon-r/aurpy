@@ -29,24 +29,22 @@ import sys
 
 def full_aur_update():
     pkgd = pkg.foreign()
-    
     print()
     update_lst = sorted ( pkg.test_packages( pkgd ) )
     print()
-    
     pkg.test_dependencies( pkgd , update_lst )
     pkg.select_packages( pkgd , update_lst )
-    pkg.update_packages( pkgd , update_lst )
+    pkg.update_packages_base( pkgd , update_lst )
     
     
 def isntall_aur_pkgs( pkgs_list ):
     pkgd = pkg.build_pkgs_dict( pkgs_list , version=False , explicit=True )
-    print( pkgd )
+    print()
     update_lst = sorted ( pkg.test_packages( pkgd ) )
-    print( update_lst )
+    print()
     pkg.test_dependencies( pkgd , update_lst )
     pkg.select_packages( pkgd , update_lst )
-    pkg.update_packages( pkgd , update_lst )
+    pkg.update_packages_base( pkgd , update_lst )
     
 
 

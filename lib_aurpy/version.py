@@ -19,11 +19,11 @@ import re
 class version( object ):
     def __init__( self , ver ):
         
-        m = re.match( '^\s*\w+[\:\.\w+]*\-\d+\s*$' , ver )
+        m = re.match( '^\s*\w+[\:\.\w+]*(\-\d+){0,1}\s*$' , ver )
         
         if m == None :
             print( ver )
-            raise NameError( "Invalid version string!" )
+            raise NameError( "Invalid version string: %s !!"%ver )
         
         self._ver = ver
         self._to_list()
