@@ -25,14 +25,14 @@ class version( object ):
             print( ver )
             raise NameError( "Invalid version string!" )
         
-        self.ver = ver
+        self._ver = ver
         self._to_list()
     
     def _to_list(self):
-        self._lver = re.split( '[\:\.\-]' , self.ver )
+        self._lver = re.split( '[\:\.\-]' , self._ver )
         
     def __str__(self):
-        return self.ver
+        return self._ver
         
     def __lt__( self , other ):
         
