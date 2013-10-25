@@ -199,8 +199,8 @@ def parse_pkgbuild( pkgbuild ):
     """.split()
         
     cmd = """
-        . PKGBUILD ; 
         . /etc/makepkg.conf ; 
+        . PKGBUILD ; 
     """
     
     for v in variables :
