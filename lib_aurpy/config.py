@@ -125,9 +125,20 @@ class aurpy_config( object ):
         
         return self._config.get( "global" , "compile_dir" )    
     
+    def _get_sqlite_package_id(self , pkg_name ):
+        conn = sqlite3.connect( self.sqlite_file() )
+        c = conn.cursor()
+        qe = " select * from package where name == \"%s\" " % base_pkg_name
+        id_base = None
+        for row in c: id_base = row[0]          
+        c.close()
+        
+        return id_base                
+        
+    
     def set_subpackages(self , base_pkg_name , sub_pkg_names ):
         """
-        Insert a base package plus his sub-packages in the database  
+        Insert a base package plus his sub-packages in the database; and update the database according the new data.  
         :param pkg_name: The name of the package
         :param sub_pkg_names: A list with the names of the sub-packages
         """          
@@ -135,32 +146,33 @@ class aurpy_config( object ):
         c = conn.cursor()
         qe = " select * from package where name == \"%s\" " % base_pkg_name
         
-        res = None
-        c.execute( qe )
-        for row in c:
-            res = row[0]
+        id_base = self._get_sqlite_package_id(base_pkg_name)
         
-        if res :
-            sbs = self.has_subpackages(base_pkg_name)
+        if id_base :
+            sbs = self.has_subpackages( base_pkg_name )
+                        
         else :
             qe = "insert into package ( name ) values ( \"%s\" ) "% ( base_pkg_name )
             c.execute( qe )
             conn.commit()
             
-            qe = "select id from package where name == \"%s\" " % base_pkg_name
-            c.execute( qe )
-            id_base = -1
-            for row in c:
-                id_base = row[0]
+            id_base = self._get_sqlite_package_id( base_pkg_name )
             
-            for p in sub_pkg_names :
-                if p == base_pkg_name : 
-                    qe = "update package set base_package = %s  where name == \"%s\" "% ( id_base , base_pkg_name )
-                    continue
-                qe = "insert into package ( name , base_package ) values ( \"%s\" , %s ) "% ( base_pkg_name , id_base )
-                c.execute( qe )
-            conn.commit()
+        for p in sub_pkg_names :
+            if p == base_pkg_name or not self._get_sqlite_package_id( p ) : 
+                qe = "update package set base_package = %s  where name == \"%s\" "% ( id_base , base_pkg_name )
+                continue
+            qe = "insert into package ( name , base_package ) values ( \"%s\" , %s ) "% ( base_pkg_name , id_base )
+            c.execute( qe )
+        conn.commit()
         
+        sbs = set( sub_pkg_names ) - set( sbs )
+        
+        for p in sbs :
+            qe = "update package set base_package = NULL  where name == \"%s\" "% ( id_base , base_pkg_name )
+            c.execute( qe )
+            
+        conn.commit()
         c.close()
     
         
