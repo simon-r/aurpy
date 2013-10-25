@@ -151,8 +151,8 @@ class package( object ):
         tools.install_pkg( self.name , pkg_file_names )
         
         if self.has_subpackages :
-            pass
-            # update db
+            config = cfg.aurpy_config()
+            config.set_subpackages( self.name , pkg_file_names )
     
     
     def read_repo_data(self):

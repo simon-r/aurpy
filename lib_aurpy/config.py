@@ -126,6 +126,11 @@ class aurpy_config( object ):
         return self._config.get( "global" , "compile_dir" )    
     
     def set_subpackages(self , base_pkg_name , sub_pkg_names ):
+        """
+        Insert a base package plus his sub-packages in the database  
+        :param pkg_name: The name of the package
+        :param sub_pkg_names: A list with the names of the sub-packages
+        """          
         conn = sqlite3.connect( self.sqlite_file() )
         c = conn.cursor()
         qe = " select * from package where name == \"%s\" " % base_pkg_name
@@ -136,7 +141,7 @@ class aurpy_config( object ):
             res = row[0]
         
         if res :
-            pass
+            sbs = self.has_subpackages(base_pkg_name)
         else :
             qe = "insert into package ( name ) values ( \"%s\" ) "% ( base_pkg_name )
             c.execute( qe )
@@ -159,7 +164,12 @@ class aurpy_config( object ):
         c.close()
     
         
-    def is_subpackage( self , pkg_names ):
+    def is_subpackage( self , pkg_name ):
+        """
+        If the installed package is a sub-package it returns the name of the base package
+        :param pkg_name: The name of the package
+        :rtype: return the name of the main package or if do not exists return None  
+        """        
         conn = sqlite3.connect( self.sqlite_file() )
         c = conn.cursor()
         
@@ -173,9 +183,30 @@ class aurpy_config( object ):
         c.close()
         
         return res  
+    
+    def has_subpackages( self , pkg_name ):
+        """
+        If the installed package has some sub-packages it returns a list containing the names of the sub-packages
+        :param pkg_name: The name of the package
+        :rtype: return the name of the sub package or if do not exists return None  
+        """         
+        conn = sqlite3.connect( self.sqlite_file() )
+        c = conn.cursor()
         
+        qe = " select name from package where base_package in ( select id from package where name == \"%s\" ) " % pkg_name
         
-             
+        res = []
+        c.execute( qe )
+        for row in c:
+            res.append( row[0] )        
+        
+        c.close()
+        
+        if len( res ) > 0 :
+            return res
+        else : 
+            return None
+        
     
     def get_aur_dw_pkg_url( self , pkg_name ):
         return self.get_aur_url() + "/" + pkg_name[:2] + "/" + pkg_name + "/" + pkg_name + ".tar.gz"
