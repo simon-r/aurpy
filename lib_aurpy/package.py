@@ -148,8 +148,12 @@ class package( object ):
             get_sub_pkg_file_names( self.name , self._pkg_data["name"] )
         else :
             pkg_file_names = [ "%s-%s-%s%s" % ( self.name , self.repo_version , arch , self._pkg_data["PKGEXT"][0] ) ]
-            
-        pacman.install_pkg_list( self.name , pkg_file_names )
+        
+        if asdeps :
+            pacman.install_pkg_list( self.name , pkg_file_names , reason=glog.DEPENDS )
+        else :    
+            pacman.install_pkg_list( self.name , pkg_file_names )
+        
         
         if self.has_subpackages :
             config = cfg.aurpy_config()
@@ -457,7 +461,7 @@ def compile_sequence( package ):
     package.download_src()
     package.unpack_src()
     print()
-    ed = input( "\x1b[1;36mEdir PKGBUILD with $EDITOR [Y/n]\x1b[0m" )
+    ed = input( "\x1b[1;36mEdir PKGBUILD with $EDITOR [Y/n]: \x1b[0m" )
     if ed not in [ "n" , "N" ] :
         package.edit_pkgbuild()
         
@@ -465,7 +469,7 @@ def compile_sequence( package ):
     
     for i in inl :
         print()
-        ed = input( "\x1b[1;36mEdir %s with $EDITOR [Y/n]\x1b[0m"%i )
+        ed = input( "\x1b[1;36mEdit %s with $EDITOR [Y/n]: \x1b[0m"%i )
         if ed not in [ "n" , "N" ] :
             package.edit_build_file( i )
     
@@ -487,7 +491,7 @@ def compile_sequence( package ):
         
     
     
-def install_sequence( package , confirm=True ):
+def install_sequence( package , confirm=True , asdep=False ):
     
     while True :
         print()
@@ -497,7 +501,7 @@ def install_sequence( package , confirm=True ):
             ist = "y"
             
         if ist in [ "y" , "Y" ] :
-            package.install()
+            package.install( asdeps=asdep )
             break 
 
 
