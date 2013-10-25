@@ -30,6 +30,17 @@ class aurpy_config( object ):
         self._cfg_dir = os.path.expanduser("~") + "/.config/aurpy"
         self._cfg_file = "aurpy.cfg"
         
+        self._database = """ create table package (
+                                name text not null unique ,
+                                id integer primary key autoincrement , 
+                                compile_dir text ,
+                                has_sub_pkg boolean default false ,
+                                base_package integer ,
+                                origin text ,
+                                origin_pkgbuild_url text ,
+                                origin_src_pkg_url text
+                                )  """.strip()
+        
         self._sqlite_file = "aurpy.sqlite"
         
         if not os.path.exists( self.cfg_file() ) :
@@ -42,14 +53,7 @@ class aurpy_config( object ):
         fp = open( self.cfg_file() )
         self._config.readfp( fp )
         
-        self._database = """
-        create table package (
-            name text not null ,
-            id int primary key not null AUTOINCREMENT , 
-            compile_dir text ,
-            base_package int
-            )
-        """
+
         
     
     def cfg_file(self):
@@ -97,9 +101,27 @@ class aurpy_config( object ):
         return self.get_tmp_dir() + "/" + ''.join(random.choice(chars) for x in range(20))
     
     def get_pkg_build_dir( self , pkg_name ):
-        return self._config.get( "global" , "compile_dir" ) + "/" + pkg_name
+        return self.get_compile_dir( pkg_name ) + "/" + pkg_name
+    
+    def _sqlite_get_compile_dir( self , pkg_name ):
+        conn = sqlite3.connect( self.sqlite_file() )
+        c = conn.cursor()
+        
+        qe = " select compile_dir from package where name == \"%s\" " % pkg_name
+        
+        c.execute( qe )
+        res = None 
+        for row in c:
+            res = row[0]
+        return res 
     
     def get_compile_dir( self , pkg_name=None ):
+        
+        if pkg_name != None :
+            cd = self._sqlite_get_compile_dir( pkg_name )
+            if cd :
+                return cd
+        
         return self._config.get( "global" , "compile_dir" )    
     
     def get_aur_dw_pkg_url( self , pkg_name ):
