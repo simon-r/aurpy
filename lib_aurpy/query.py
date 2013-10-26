@@ -19,6 +19,7 @@ from subprocess import check_output, CalledProcessError
 import lib_aurpy.config as cfg
 import lib_aurpy.glob as glob
 import lib_aurpy.version as ver
+import lib_aurpy.tools as tools
 
 import urllib.request
 import os
@@ -46,7 +47,7 @@ class query( object ):
         :rtype: a list containing [ name , version ] 
         """
         
-        pl = pkg_name.split( ">=" )
+        pl = tools.clean_pkg_name( pkg_name )
         
         cmd = "pacman -Q %s"%pl[0]
         
@@ -86,7 +87,7 @@ class query( object ):
         :rtype: return a list containing [ name , repository , version ]. If the package do non exists it return None 
         """
         
-        pl = pkg_name.split( ">=" )
+        pl = tools.clean_pkg_name ( pkg_name )
         
         cmd = "pacman -Si %s"%pl[0]
         try:
@@ -126,7 +127,7 @@ class query( object ):
         :rtype: True if it exists of False
         """
         
-        pl = pkg_name.split( ">=" )
+        pl = tools.clean_pkg_name( pkg_name )
         
         config = cfg.aurpy_config()
         

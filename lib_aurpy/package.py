@@ -214,6 +214,7 @@ class package( object ):
     def read_pkgbuild_data(self):
         self._pkgbuild = tools.get_pkgbuild( self.origin , self.name )
         self._pkg_data = tools.parse_pkgbuild( self._pkgbuild )
+        
     
     def _list_dependecies( self , dep ):
         query = qe.query()
@@ -271,7 +272,7 @@ class package( object ):
         self._depends = defaultdict()
         
         for dd in ( aur_l + aur_mkl + repo_l + repo_mkl ) :
-            d = dd.split( ">=" )[0]
+            d = tools.clean_pkg_name( dd )
             print(d)
             pkg = package()
             pkg.name = d 
@@ -288,7 +289,8 @@ class package( object ):
                  
             ######################################
             ######################################
-            #pkg.test_dependecies()
+            pkg.read_pkgbuild_data() 
+            pkg.test_dependecies()
             
             if tools.own_package( d , aur_mkl ) :
                 pkg.reason = glob.MAKE_DEPENDS
@@ -296,7 +298,7 @@ class package( object ):
                 pkg.reason = glob.DEPENDS
             
             print( "ssssssssssssssssssssssssssssssssssssss" )
-            pkg.read_pkgbuild_data() 
+            #pkg.read_pkgbuild_data() 
             pkg.build_depends_rec()
             
             self._depends[ pkg.name ] = pkg
@@ -530,13 +532,17 @@ def update_packages_base( pkgd , update_lst ):
     print()
     
     for pkg_name in update_lst :
-        try :
-            compile_sequence( pkgd[pkg_name] )
-            install_sequence( pkgd[pkg_name] )
-        except :
-            print()
-            print ( " \x1b[1;31m The compilation of %s has been interrupted due to an error "
-                    "during the building procedure !!! \x1b[0m" % pkg_name )
+        compile_sequence( pkgd[pkg_name] )
+        install_sequence( pkgd[pkg_name] )
+#         try :
+#             compile_sequence( pkgd[pkg_name] )
+#             install_sequence( pkgd[pkg_name] )
+#         except :
+#             print()
+#             print ( " \x1b[1;31m The compilation of %s has been interrupted due to an error "
+#                     "during the building procedure !!! \x1b[0m" % pkg_name )
+#             print()
+#             #####
             
             
         

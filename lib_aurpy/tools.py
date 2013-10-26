@@ -38,6 +38,10 @@ def progress_bar( pc ):
     print( "[" + "#" * pcc + "%3d%%"%pcc + " " * (len-pcc) + "]" + chr(27) + "[A" )
 
     
+def clean_pkg_name( pkg_name ):
+    pl = re.split( "[><][=]{0,1}" , pkg_name )
+    return pl[0]
+    
 def get_pkgbuild( origin , pkg_name ):
     
     config = cfg.aurpy_config()
@@ -129,7 +133,7 @@ def unpack_src( pkg_name ):
 def own_package( pkg_name , pkg_list ):
     
     for p in pkg_list :
-        pl = p.split(">=")
+        pl = clean_pkg_name( pkg_name )
         
         if pl[0] == pkg_name :
             return True
