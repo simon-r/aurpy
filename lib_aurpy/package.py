@@ -224,7 +224,7 @@ class package( object ):
                 self._pkg_data["%s_installed"%dep].append( d )
             elif query.test_repo_package( d ) :
                 self._pkg_data["%s_repo"%dep].append( d )
-            elif query.test_aur_packege( d ) :
+            elif query.test_aur_package( d ) :
                 self._pkg_data["%s_aur"%dep].append( d )
             elif query.test_group_package( d ) :
                 self._pkg_data["%s_group"%dep].append( d )

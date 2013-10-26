@@ -23,6 +23,7 @@ import lib_aurpy.tools as tools
 
 import urllib.request
 import os
+import re
 
 class query( object ):
     def __init__(self):
@@ -49,7 +50,7 @@ class query( object ):
         
         pl = tools.clean_pkg_name( pkg_name )
         
-        cmd = "pacman -Q %s"%pl[0]
+        cmd = "pacman -Q %s"%pl
         
         #print( cmd )
         #print( pl )
@@ -59,12 +60,12 @@ class query( object ):
         except :
             return None
         
-        if len( pl ) > 1 :
-            v = ver.version( pl[1] )
-            vi = ver.version( out[1] )
-            
-            if vi < v :
-                return None
+#         if len( pl ) > 1 :
+#             v = ver.version( pl )
+#             vi = ver.version( out[1] )
+#             
+#             if vi < v :
+#                 return None
         
         return out
     
@@ -89,18 +90,18 @@ class query( object ):
         
         pl = tools.clean_pkg_name ( pkg_name )
         
-        cmd = "pacman -Si %s"%pl[0]
+        cmd = "pacman -Si %s"%pl
         try:
             out = check_output( cmd.split() , stderr=open( os.devnull ) ).decode().strip().splitlines()
         except :
             return None
         
-        if len( pl ) > 1 :
-            v = ver.version( pl[1] )
-            vi = ver.version( out[2].split()[2] )
-            
-            if vi < v :
-                return None     
+#         if len( pl ) > 1 :
+#             v = ver.version( pl[1] )
+#             vi = ver.version( out[2].split()[2] )
+#             
+#             if vi < v :
+#                 return None     
         
         out = [ out[1].split()[2] , out[0].split()[2] , out[2].split()[2] ]
         
@@ -120,7 +121,7 @@ class query( object ):
         
         return out     
         
-    def test_aur_packege( self , pkg_name ):
+    def test_aur_package( self , pkg_name ):
         """
         Test if a package exists in AUR
         :param pkg_name: The name of the package
@@ -132,10 +133,16 @@ class query( object ):
         config = cfg.aurpy_config()
         
         opener = urllib.request.FancyURLopener({})
-        f = opener.open( config.get_pkg_url( glob.AUR , pl[0] ) )
+        
+        url = config.get_pkg_url( glob.AUR , pl )
+        f = opener.open( url )
         
         try :
-            aur_html = f.read()
+            aur_html = f.read().decode()
+            
+            if re.search ( "404\s+\-\s+Page\s+Not\s+Found" , aur_html ) :
+                return False 
+            
         except :
             return False
         

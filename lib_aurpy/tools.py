@@ -135,7 +135,7 @@ def own_package( pkg_name , pkg_list ):
     for p in pkg_list :
         pl = clean_pkg_name( pkg_name )
         
-        if pl[0] == pkg_name :
+        if pl == pkg_name :
             return True
         
         return False

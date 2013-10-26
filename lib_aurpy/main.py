@@ -48,17 +48,21 @@ def isntall_aur_pkgs( pkgs_list ):
     
 
 
-def test_database():
-    cf = cfg.aurpy_config()
+def test():
     
-    cf.set_subpackages( "mainp" , [ "sub1" , "sub2" , "sub3" , "sub4" , "mainp" ] )
-    cf.set_subpackages( "mainp2" , [ "sub12" , "sub22" , "sub32" , "sub42" , "mainp2" ] )
-    
-    print( cf.is_subpackage( "sub12" ) )
-    print( cf.has_subpackages( "mainp2" ) )
-    
-    cf.insert_db_package( "ciao" , "/tmp" , "aur" , "aur_url" , "src_url" )
-    cf.insert_db_package( "ciao2" , "/tmp" , "aur" , "aur_url" , "src_url" )
+    q = que.query()
+    print( q.test_aur_package( "yaourt" ) )
+        
+#     cf = cfg.aurpy_config()
+#     
+#     cf.set_subpackages( "mainp" , [ "sub1" , "sub2" , "sub3" , "sub4" , "mainp" ] )
+#     cf.set_subpackages( "mainp2" , [ "sub12" , "sub22" , "sub32" , "sub42" , "mainp2" ] )
+#     
+#     print( cf.is_subpackage( "sub12" ) )
+#     print( cf.has_subpackages( "mainp2" ) )
+#     
+#     cf.insert_db_package( "ciao" , "/tmp" , "aur" , "aur_url" , "src_url" )
+#     cf.insert_db_package( "ciao2" , "/tmp" , "aur" , "aur_url" , "src_url" )
     
 #     for i in range(100) :
 #         cf.insert_db_package( "ciao%d"%i , "/tmp" , "aur" , "aur_url" , "src_url" )
@@ -71,7 +75,7 @@ def test_database():
 
 def main():
  
-    #test_database()
+    #test()
  
     options = args.parse_args()
 
